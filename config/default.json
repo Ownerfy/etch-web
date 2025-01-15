@@ -1,0 +1,32 @@
+{
+  "appName": "etch",
+  "appNameCapitalized": "Etch",
+  "hostname": "etch.social",
+  "nip05Domain": "etch.social",
+  "icon": "/img/icon128.png",
+  "navLogo": "/img/icon128.png",
+  "defaultTheme": "etch",
+  "defaultNotesTheme": "etch",
+  "navItems": [
+    "home",
+    "search",
+    "messages",
+    "notifications",
+    "wallet",
+    "settings",
+    "about"
+  ],
+  "rightColumnFilters": false,
+  "publicDir": "public/etch",
+  "aboutText": "Decentralizing social media.",
+  "features": {
+    "git": false,
+    "cashu": true,
+    "pushNotifications": true,
+    "analytics": true
+  },
+  "defaultSettings": {
+    "youtubePrivacyMode": false,
+    "notificationServer": "https://notifications.iris.to"
+  }
+}

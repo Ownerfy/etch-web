@@ -1,0 +1,64 @@
+{
+  "env": {
+    "commonjs": true,
+    "es6": true,
+    "node": true,
+    "browser": true
+  },
+  "plugins": ["react", "prettier", "react-refresh", "@typescript-eslint"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:react-hooks/recommended",
+    "plugin:prettier/recommended"
+  ],
+  "ignorePatterns": ["dist", "node_modules"],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2020,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "rules": {
+    "@typescript-eslint/ban-types": [
+      "error",
+      {
+        "types": {
+          "React.FC": "Useless and has some drawbacks, see https://github.com/facebook/create-react-app/pull/8177",
+          "FC": "Useless and has some drawbacks, see https://github.com/facebook/create-react-app/pull/8177",
+          "React.FunctionComponent": "Useless and has some drawbacks, see https://github.com/facebook/create-react-app/pull/8177",
+          "React.FunctionalComponent": "Preact specific, useless and has some drawbacks, see https://github.com/facebook/create-react-app/pull/8177"
+        }
+      }
+    ],
+    "prettier/prettier": [
+      "error",
+      {
+        "endOfLine": "auto"
+      }
+    ],
+    "react-hooks/exhaustive-deps": "off",
+    "no-trailing-spaces": "error",
+    "no-undef": "error",
+    "no-const-assign": "error",
+    "no-duplicate-imports": "error",
+    "prefer-const": "warn",
+    "no-nested-ternary": "warn",
+    "no-var": "warn",
+    "@typescript-eslint/no-var-requires": "error",
+    "react-refresh/only-export-components": ["warn", {"allowConstantExport": true}],
+    "react/react-in-jsx-scope": "off"
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  },
+  "globals": {
+    "CONFIG": "readonly",
+    "NodeJS": "readonly"
+  }
+}

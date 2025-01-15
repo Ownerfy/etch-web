@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  font-size: 15px;
+}
+
+.btn, .input {
+  @apply rounded-full;
+}
+
+/* Default theme */
+.btn-primary {
+  @apply text-base-content;
+  border-width: 0px;
+  background: linear-gradient(to top, rgba(60, 33, 200, 1), rgba(122, 41, 288, 1));
+  transition: background-image 0.3s ease;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(to top, rgba(60, 33, 200, 0.8), rgba(122, 41, 288, 0.8));
+}
+
+/* Dark theme */
+[data-theme="dark"] .btn-primary {
+  background: linear-gradient(to top, rgba(60, 33, 200, 1), rgba(122, 41, 288, 1));
+}
+
+[data-theme="dark"] .btn-primary:hover {
+  background: linear-gradient(to top, rgba(60, 33, 200, 0.8), rgba(122, 41, 288, 0.8));
+}
+
+/* Light theme */
+[data-theme="light"] .btn-primary {
+  background: linear-gradient(to top, rgba(60, 33, 200, 1), rgba(122, 41, 288, 1));
+  color: #ffffff;
+}
+
+[data-theme="light"] .btn-primary:hover {
+  background: linear-gradient(to top, rgba(60, 33, 200, 0.8), rgba(122, 41, 288, 0.8));
+}
+
+/* Etch theme */
+[data-theme="etch"] .btn-primary {
+  background: #ff3f15;
+}
+
+[data-theme="etch"] .btn-primary:hover {
+  background: #ff3f15;
+  box-shadow: 0 0 10px #ff3f15;
+}
+
+iframe {
+  @apply max-w-full;
+}
+
+/* Webkit scrollbar (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #34216c;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #702ace;
+  border-radius: 4px;
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #702ace #34216c; /* Thumb and track color */
+}
+
+/* src/shared/styles/scrollbar.css */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}
+
+/* react-trello kanban board styles */
+
+/* Card & Lane titles */
+.sc-kpDprT {
+  color: #c6c8d3;
+}
+
+/* Lane title */
+.eseTMN {
+  color: #c6c8d3;
+}
+
+/* Card item */
+.ixvwTI {
+  border-bottom: none !important;
+}
+
+/* Card inner divider */
+.iTfYoL {
+  border-bottom: 1px solid #7b7e8b !important;
+}
+
+/* Card label & description */
+.sc-fHjqbK {
+  color: #c6c8d3;
+}
+
+/* Click to add card text */
+.sc-gFqAYk {
+  color: #858894 !important;
+}
+
+/* modals */
+
+.modal-box {
+  max-width: fit-content !important;
+}
+
+/* mui tabs */
+
+.MuiTab-root.Mui-selected {
+  color: #c6c8d3 !important;
+}
