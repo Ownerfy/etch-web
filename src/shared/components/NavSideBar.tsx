@@ -171,7 +171,7 @@ const NavSideBar = () => {
             to="/"
           >
             <img className="w-8 h-8" src={logoUrl} />
-            <span className="inline md:hidden xl:inline">{CONFIG.appName}</span>
+            <span className="inline md:hidden xl:inline">tch</span>
           </NavLink>
           <ul className="menu px-2 py-0 text-xl flex flex-col gap-4 md:gap-2 xl:gap-4 rounded-2xl">
             {navItems.map(

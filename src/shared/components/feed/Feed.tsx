@@ -138,7 +138,6 @@ function Feed({
     debouncedInitialLoadDone()
 
     sub.on("event", (event) => {
-      console.log("event", event)
       if (event && event.created_at && !eventsRef.current.has(event.id)) {
         if (oldestRef.current === undefined || oldestRef.current > event.created_at) {
           oldestRef.current = event.created_at

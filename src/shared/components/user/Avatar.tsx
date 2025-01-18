@@ -99,7 +99,7 @@ export const Avatar = ({
             onError={handleImageError}
           />
         ) : (
-          <MinidenticonImg username={pubKeyHex} alt="User Avatar" />
+          <MinidenticonImg username={pubKeyHex} alt="User Avatar"/>
         )}
       </div>
       {showHoverCard && (

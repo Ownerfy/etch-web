@@ -20,7 +20,7 @@ const ImageComponent = ({match, index, onClickImage, blur}: ImageComponentProps)
   return (
     <div
       key={match + index}
-      className="flex justify-center items-center md:justify-start h-96 max-h-screen my-2"
+      className="flex justify-center items-center md:justify-start my-2"
     >
       {hasError ? (
         <div className="my-2 text-sm break-all">{match}</div>
@@ -29,7 +29,7 @@ const ImageComponent = ({match, index, onClickImage, blur}: ImageComponentProps)
           width={600}
           onError={() => setHasError(true)}
           onClick={onClick}
-          className={classNames("my-2 rounded max-h-96 max-w-full cursor-pointer", {
+          className={classNames("my-2 rounded max-w-full cursor-pointer", {
             "blur-md": blur,
           })}
           src={match}

@@ -43,10 +43,8 @@ dist-ssr
 *.local
 build
 dev-dist
-# this is where the server side hosting page is put to intercept for metadata
-/functions/hosting
 
-# aider AI code editor
+# aider
 .aider*
 .aider.chat.history.md
 .aider.input.history
@@ -59,6 +57,7 @@ functions/set.runtime.sh
 /db-sync
 .firebaserc
 .firebase/*
+firebase.json
 
 # env
 .env
@@ -73,7 +72,7 @@ functions/.env
 **/.env.test.local
 **/.env.production.local
 
-# Mac
+# mac
 **/.DS_Store
 .DS_Store
 src/.DS_Store
@@ -82,6 +81,7 @@ src/.DS_Store
 service-key/creds.json
 
 # logs
+README.log.md
 firebase-debug.log
 logs
 *.log
@@ -96,8 +96,5 @@ firestore-debug.log
 **/npm-debug.log*
 **/yarn-debug.log*
 **/yarn-error.log*
-
-# idea
-**/.idea/*
 
 

@@ -4,7 +4,7 @@ import FeedItemComment from "./FeedItemComment.tsx"
 import FeedItemRepost from "./FeedItemRepost.tsx"
 import FeedItemShare from "./FeedItemShare.tsx"
 import {FeedItemLike} from "./FeedItemLike.tsx"
-import FeedItemZap from "./FeedItemZap.tsx"
+// import FeedItemZap from "./FeedItemZap.tsx"
 import {useLocalState} from "irisdb-hooks"
 import classNames from "classnames"
 
@@ -27,7 +27,7 @@ function FeedItemActions({event}: FeedItemActionsProps) {
       {event.kind !== 30078 && <FeedItemComment event={event} />}
       {event.kind !== 30078 && <FeedItemRepost event={event} />}
       <FeedItemLike event={event} />
-      <FeedItemZap event={event} />
+      {/* <FeedItemZap event={event} /> */}
       <FeedItemShare event={event} />
     </div>
   )

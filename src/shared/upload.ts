@@ -1,3 +1,4 @@
+import {getStorage, ref, uploadBytesResumable, getDownloadURL} from "firebase/storage"
 import socialGraph from "@/utils/socialGraph"
 import {NDKEvent} from "@nostr-dev-kit/ndk"
 import {ndk} from "irisdb-nostr"
@@ -70,5 +71,37 @@ export async function uploadFile(
 
     xhr.onerror = () => reject(new Error(`Upload to ${url} failed`))
     xhr.send(fd)
+  })
+}
+
+export async function uploadToFirebaseStorage(
+  file: File,
+  onProgress?: (progress: number) => void
+): Promise<string> {
+  const storage = getStorage()
+  const storageRef = ref(storage, `uploads/${file.name}`)
+  const uploadTask = uploadBytesResumable(storageRef, file)
+
+  return new Promise((resolve, reject) => {
+    uploadTask.on(
+      "state_changed",
+      (snapshot) => {
+        if (onProgress) {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+          onProgress(progress)
+        }
+      },
+      (error) => {
+        reject(new Error(`Upload to Firebase Storage failed: ${error.message}`))
+      },
+      async () => {
+        try {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
+          resolve(downloadURL)
+        } catch (error) {
+          reject(new Error(`Failed to get download URL: ${error.message}`))
+        }
+      }
+    )
   })
 }

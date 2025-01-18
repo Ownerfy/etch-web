@@ -211,12 +211,7 @@ function FeedItem({
         )}
         <div className="flex flex-row gap-4 flex-1">
           <div className={classNames("flex-1 w-full", {"text-lg": standalone})}>
-            <FeedItemHeader
-              event={event}
-              repostedEvent={repostedEvent}
-              tight={asReply || asRepliedTo}
-            />
-            <div className={classNames({"pl-12": asReply || asRepliedTo})}>
+          <div className={classNames({"pl-12": asReply || asRepliedTo})}>
               {isPostHidden ? (
                 <HiddenPostMessage toggleViewPost={toggleViewPost} />
               ) : (
@@ -228,6 +223,11 @@ function FeedItem({
                 />
               )}
             </div>
+            <FeedItemHeader
+              event={event}
+              repostedEvent={repostedEvent}
+              tight={asReply || asRepliedTo}
+            />
           </div>
         </div>
         <div className={classNames({"pl-10": asReply || asRepliedTo})}>

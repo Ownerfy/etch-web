@@ -9,7 +9,7 @@ function PermissionNotification({event}: PermissionNotificationProps) {
   const repo = event.tagValue("r")
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="PermissionNotification flex flex-col gap-2">
       <p>
         <b>Gave you write-access to a repository</b>
       </p>

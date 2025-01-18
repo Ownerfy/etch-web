@@ -29,7 +29,7 @@ function LongForm({event, standalone}: LongFormProps) {
   }, [event])
 
   return (
-    <div className="flex flex-col gap-2 px-5">
+    <div className="LongForm flex flex-col gap-2 px-5">
       <h1 className="flex items-center gap-2 text-lg">
         <img src={longFormIcon} className="opacity-80 w-8 h-8" />
         {title}

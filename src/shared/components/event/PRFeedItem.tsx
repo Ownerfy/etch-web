@@ -21,7 +21,7 @@ function PRFeedItem({event}: PRFeedItemProps) {
   }, [event])
 
   return (
-    <section className="mb-4 p-4 bg-base-100 rounded-lg shadow">
+    <section className="PRFeedItem mb-4 p-4 bg-base-100 rounded-lg shadow">
       <Link
         className="flex items-center gap-2 cursor-pointer"
         to={`/repo/${repo}/pull-requests/${pullRequestId}`}

@@ -21,7 +21,7 @@ function IssueFeedItem({event}: IssueFeedItemProps) {
   }, [event])
 
   return (
-    <section className="mb-4 p-4 bg-base-100 rounded-lg shadow">
+    <section className="IssueFeedItem mb-4 p-4 bg-base-100 rounded-lg shadow">
       <Link
         className="flex items-center gap-2 cursor-pointer"
         to={`/repo/${repo}/issues/${issueId}`}

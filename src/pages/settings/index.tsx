@@ -96,6 +96,17 @@ function Settings() {
       ],
     },
     {
+      title: "Etch",
+      items: [
+        {
+          icon: "hard-drive",
+          iconBg: "bg-blue-500",
+          message: "About",
+          path: "/about",
+        },
+      ],
+    },
+    {
       title: "Log out",
       items: [
         {

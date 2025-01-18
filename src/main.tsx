@@ -4,7 +4,6 @@ import {ndk, privateKeyLogin} from "irisdb-nostr"
 import {RouterProvider} from "react-router-dom"
 import ReactDOM from "react-dom/client"
 import {localState} from "irisdb"
-
 import {router} from "@/pages"
 
 try {

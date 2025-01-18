@@ -63,7 +63,8 @@ export function Network() {
         dhtPrivKeyUint8Array,
         JSON.stringify(connectToRelayUrls)
       ).then((payload) => {
-        const payloadHex = uint8ArrayToHexString(payload.payload)
+        // TODO: added new here, monitor this
+        const payloadHex = uint8ArrayToHexString(new Uint8Array(payload.payload.buffer))
         const dhtSigHex = uint8ArrayToHexString(payload.dht_sig)
 
         const relayListEvent = new NDKEvent()

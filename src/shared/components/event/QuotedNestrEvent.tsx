@@ -11,7 +11,7 @@ function QuotedNestrEvent({event}: QuotedNestrEventProps) {
 
   return (
     <>
-      <div className="TextNote-container">
+      <div className="QuotedNestrEvent TextNote-container">
         <p className="TextNote-text">
           {noteLines &&
             noteLines.map((line: string, index: number) => (

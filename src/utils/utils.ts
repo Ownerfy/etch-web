@@ -116,7 +116,10 @@ export async function createSignedDHTPayload(
 
   const encodedPayload = bencode.encode(payload) // Bencode the payload
 
-  const signature: Uint8Array = await ed25519.signAsync(encodedPayload, privateKey)
+  const signature: Uint8Array = await ed25519.signAsync(
+    new Uint8Array(encodedPayload),
+    privateKey
+  )
 
   return {
     payload: encodedPayload,

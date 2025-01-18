@@ -68,8 +68,10 @@ const HyperText = memo(
             } else if (typeof child === "string") {
               charCount += child.length
             }
+            acc.push(child)
+          } else {
+            acc.unshift(child)
           }
-          acc.push(child)
           return acc
         },
         [] as Array<ReactNode | string>
@@ -108,7 +110,7 @@ const HyperText = memo(
     })
 
     const result = (
-      <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+      <div className="HypterText whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
         {processedChildren}
       </div>
     )

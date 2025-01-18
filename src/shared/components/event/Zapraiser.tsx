@@ -32,7 +32,7 @@ function Zapraiser({event}: ZapraiserProps) {
   }, [event, zapRefresh])
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="Zapraiser flex flex-col gap-2">
       <h1 className="flex gap-2">
         <b>{event.tagValue("title")}</b>
         <span className="text-gray-500">
