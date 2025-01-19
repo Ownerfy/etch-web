@@ -13,7 +13,7 @@ const Modal = ({onClose, children, hasBackground = true}: ModalProps) => {
   const [isMouseDownOnBackdrop, setIsMouseDownOnBackdrop] = useState(false)
 
   const showModal = () => {
-    modalRef.current?.showModal()
+    modalRef.current?.show()
   }
 
   const closeModal = () => {
@@ -66,7 +66,7 @@ const Modal = ({onClose, children, hasBackground = true}: ModalProps) => {
   }, [isMouseDownOnBackdrop])
 
   return (
-    <dialog ref={modalRef} className="modal outline-none">
+    <dialog ref={modalRef} className="modal outline-none z-[500]">
       <div
         ref={contentRef}
         className={hasBackground ? "modal-box w-full max-w-full" : ""}
@@ -86,7 +86,7 @@ const Modal = ({onClose, children, hasBackground = true}: ModalProps) => {
         {children}
       </div>
       {hasBackground && (
-        <div 
+        <div
           className="modal-backdrop"
           onClick={() => {
             onClose()

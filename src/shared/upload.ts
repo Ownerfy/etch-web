@@ -99,7 +99,8 @@ export async function uploadToFirebaseStorage(
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
           resolve(downloadURL)
         } catch (error) {
-          reject(new Error(`Failed to get download URL: ${error.message}`))
+          const errorMessage = error instanceof Error ? error.message : String(error)
+          reject(new Error(`Failed to get download URL: ${errorMessage}`))
         }
       }
     )

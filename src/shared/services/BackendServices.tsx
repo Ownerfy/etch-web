@@ -5,24 +5,33 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
+  sendEmailVerification,
 } from "firebase/auth"
 import axios from "@/shared/services/AxiosWithAuth"
-import {auth} from "@/shared/services/firebase"
+import {auth} from "@/shared/services/firebase.tsx"
 
 const createUser = async ({
   email,
   username,
   password,
+  captchaToken,
 }: {
   email: string
   username: string
   password: string
+  captchaToken: string | null
 }) => {
   const result = await createUserWithEmailAndPassword(auth, email, password)
-  console.log("create firebase user result: ", result)
+
   const {user} = result
+  try {
+    await sendEmailVerification(user)
+  } catch (error) {
+    console.error("Failed to send email verification", error)
+  }
+
   const {uid} = user
-  const payload = {username, email, uid}
+  const payload = {username, email, uid, captchaToken}
   const response = await axios.post(
     `${import.meta.env.VITE_FUNCTIONS_URL}api/newUser`,
     payload

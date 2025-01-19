@@ -1,4 +1,4 @@
-import {getAuth, connectAuthEmulator} from "firebase/auth"
+import {getAuth, connectAuthEmulator, signOut} from "firebase/auth"
 import {getAnalytics} from "firebase/analytics"
 import {initializeApp} from "firebase/app"
 
@@ -21,4 +21,4 @@ if (import.meta.env.VITE_APP_EMULATOR_AUTH === "true") {
   connectAuthEmulator(auth, "http://127.0.0.1:9099")
 }
 
-export {auth, analytics}
+export {auth, analytics, signOut}

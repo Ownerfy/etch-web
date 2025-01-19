@@ -1,10 +1,8 @@
 import {ChangeEvent, FormEvent, useEffect, useRef, useState} from "react"
-// import {generateSecretKey, getPublicKey, nip19} from "nostr-tools"
 import {NDKEvent, NDKPrivateKeySigner} from "@nostr-dev-kit/ndk"
 import {createUser} from "@/shared/services/BackendServices"
-import {generateSecretKey, getPublicKey} from "nostr-tools"
-import {bytesToHex} from "@noble/hashes/utils"
-// import {useLocalState} from "irisdb-hooks"
+import ReCAPTCHA from "react-google-recaptcha"
+import {useLocalState} from "irisdb-hooks"
 import {localState} from "irisdb"
 import {ndk} from "irisdb-nostr"
 
@@ -17,13 +15,19 @@ interface SignUpProps {
 export default function SignUp({onClose}: SignUpProps) {
   const [username, setusername] = useState("")
   const [email, setEmail] = useState("")
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [nameError, setNameError] = useState("")
   const [emailError, setEmailError] = useState("")
   const [passwordError, setPasswordError] = useState("")
-  //const [, setShowLoginDialog] = useLocalState("home/showLoginDialog", false)
+  const [submitError, setSubmitError] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [isChecked, setIsChecked] = useState(false)
+  const [, setShowLoginDialog] = useLocalState("home/showLoginDialog", false)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  console.log("google key is::", import.meta.env.VITE_GOOGLE_CAPTCHA_SITE_KEY)
 
   useEffect(() => {
     if (inputRef.current) {
@@ -47,12 +51,30 @@ export default function SignUp({onClose}: SignUpProps) {
     setConfirmPassword(e.target.value)
   }
 
+  const verifyCaptcha = (res: string | null) => {
+    setCaptchaToken(res)
+  }
+
+  const expireCaptcha = () => {
+    setCaptchaToken(null)
+  }
+
+  const handleCheckboxChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setIsChecked(e.target.checked)
+  }
+
   async function onNewUserLogin(e: FormEvent) {
     e.preventDefault()
+    setIsLoading(true)
+    setSubmitError("")
+
     let valid = true
 
     if (username.match(NSEC_NPUB_REGEX)) {
       setNameError("Invalid username format.")
+      valid = false
+    } else if (username.length < 4) {
+      setNameError("Username must be at least 4 characters long.")
       valid = false
     } else {
       setNameError("")
@@ -65,7 +87,12 @@ export default function SignUp({onClose}: SignUpProps) {
       setEmailError("")
     }
 
-    if (password !== confirmPassword) {
+    if (password.length < 12) {
+      setPasswordError(
+        "Password must be at least 10 characters long. Short sentences make great passwords."
+      )
+      valid = false
+    } else if (password !== confirmPassword) {
       setPasswordError("Passwords do not match.")
       valid = false
     } else {
@@ -73,29 +100,35 @@ export default function SignUp({onClose}: SignUpProps) {
     }
 
     if (valid && username && email && password) {
-      ndk()
-      // const sk = generateSecretKey() // `sk` is a Uint8Array
-      // const pk = getPublicKey(sk) // `pk` is a hex string
-      const {sk, pk} = await createUser({username, email, password})
-      console.log("sk and pk", sk, pk)
-      // const npub = nip19.npubEncode(pk) // for cashu as well. TODO: Remove Cashu when we know its not needed
-      const privateKeyHex = bytesToHex(sk)
-      localState.get("user/privateKey").put(privateKeyHex)
-      localState.get("user/publicKey").put(pk)
-      // localStorage.setItem("cashu.ndk.privateKeySignerPrivateKey", privateKeyHex)
-      // localStorage.setItem("cashu.ndk.pubkey", pk)
-      const privateKeySigner = new NDKPrivateKeySigner(privateKeyHex)
-      ndk().signer = privateKeySigner
-      const profileEvent = new NDKEvent(ndk())
-      profileEvent.kind = 0
-      profileEvent.content = JSON.stringify({
-        display_name: username,
-        //lud16: CONFIG.features.cashu ? `${npub}@npub.cash` : undefined,
-      })
-      console.log("sk and private key", sk, privateKeyHex)
-      // profileEvent.publish()
-      // setShowLoginDialog(false)
+      try {
+        ndk()
+
+        const {privKey, nostrPubKey} = await createUser({
+          username,
+          email,
+          password,
+          captchaToken,
+        })
+
+        console.log("privKey and pubKey", privKey, nostrPubKey)
+        localState.get("user/privateKey").put(privKey)
+        localState.get("user/publicKey").put(nostrPubKey)
+        const privateKeySigner = new NDKPrivateKeySigner(privKey)
+        ndk().signer = privateKeySigner
+        const profileEvent = new NDKEvent(ndk())
+        profileEvent.kind = 0
+        profileEvent.content = JSON.stringify({
+          display_name: username,
+        })
+
+        profileEvent.publish()
+        setShowLoginDialog(false)
+      } catch (error) {
+        setSubmitError("An error occurred during sign up. Please try again.")
+      }
     }
+
+    setIsLoading(false)
   }
 
   return (
@@ -140,9 +173,39 @@ export default function SignUp({onClose}: SignUpProps) {
           onChange={(e) => onConfirmPasswordChange(e)}
         />
         {passwordError && <p className="text-red-500">{passwordError}</p>}
-        <button className="btn btn-primary" type="submit">
-          Go
+        <div>
+          <ReCAPTCHA
+            sitekey={import.meta.env.VITE_GOOGLE_CAPTCHA_SITE_KEY}
+            onChange={verifyCaptcha}
+            onExpired={expireCaptcha}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={isChecked}
+            onChange={handleCheckboxChange}
+            className="checkbox"
+          />
+          <label className="text-sm">
+            I agree to the{" "}
+            <a href="/tos" className="text-blue-500 underline">
+              TOS
+            </a>{" "}
+            and{" "}
+            <a href="/privacy" className="text-blue-500 underline">
+              Privacy Policy
+            </a>
+          </label>
+        </div>
+        <button
+          className="btn btn-primary"
+          type="submit"
+          disabled={isLoading || !isChecked}
+        >
+          {isLoading ? "Loading..." : "Go"}
         </button>
+        {submitError && <p className="text-red-500">{submitError}</p>}
       </form>
       <div
         className="flex flex-col items-center justify-center gap-4 flex-wrap border-t pt-4 cursor-pointer"

@@ -11,6 +11,7 @@
   "rightColumnFilters": false,
   "publicDir": "public/etch",
   "aboutText": "Decentralizing social media.",
+  "repository": "https://github.com/Ownerfy/etch-web",
   "features": {
     "git": false,
     "cashu": true,
