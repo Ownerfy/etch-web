@@ -1,6 +1,6 @@
 import {ChangeEvent, DragEvent, useEffect, useState} from "react"
+import {uploadToFirebaseStorage} from "@/shared/upload"
 import {NDKEvent, NDKTag} from "@nostr-dev-kit/ndk"
-import {uploadFile} from "@/shared/upload"
 import {useLocalState} from "irisdb-hooks"
 import {ndk} from "irisdb-nostr"
 
@@ -168,7 +168,7 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
     setUploadProgress(0)
     setUploadError(null)
     try {
-      const url = await uploadFile(file, (progress) => {
+      const url = await uploadToFirebaseStorage(file, (progress) => {
         setUploadProgress(progress)
       })
       handleUpload(url)

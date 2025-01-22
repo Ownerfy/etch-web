@@ -66,6 +66,17 @@ function HlsVideoComponent({match, event}: HlsVideoComponentProps) {
 
   return (
     <div className="relative w-full object-contain my-2">
+      {/* <video TODO: bring this back when proxy server is up
+        onClick={onClick}
+        ref={videoRef}
+        className={classNames("rounded max-h-[70vh] w-auto", {"blur-xl": blur})}
+        controls
+        muted
+        autoPlay
+        playsInline
+        loop
+        poster={`https://imgproxy.etch.social/thumbnail/638/${match}`}
+      ></video> */}
       <video
         onClick={onClick}
         ref={videoRef}
@@ -75,7 +86,6 @@ function HlsVideoComponent({match, event}: HlsVideoComponentProps) {
         autoPlay
         playsInline
         loop
-        poster={`https://imgproxy.iris.to/thumbnail/638/${match}`}
       ></video>
     </div>
   )

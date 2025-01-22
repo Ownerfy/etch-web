@@ -69,8 +69,19 @@ function VideoComponent({match, event}: VideoComponentProps) {
         autoPlay
         playsInline
         loop
-        poster={`https://imgproxy.iris.to/thumbnail/638/${match}`}
       ></video>
+      {/* <video TODO: bring this back when proxy server is up
+        onClick={onClick}
+        ref={videoRef}
+        className={classNames("rounded max-h-[70vh] w-auto", {"blur-xl": blur})}
+        src={match}
+        controls
+        muted
+        autoPlay
+        playsInline
+        loop
+        poster={`https://imgproxy.etch.social/thumbnail/638/${match}`}
+      ></video> */}
     </div>
   )
 }

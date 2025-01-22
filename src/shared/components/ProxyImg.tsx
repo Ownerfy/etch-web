@@ -16,7 +16,7 @@ const safeOrigins = [
   "data:image",
   "https://imgur.com/",
   "https://i.imgur.com/",
-  "https://imgproxy.iris.to/",
+  "https://imgproxy.etch.social/",
 ]
 
 const shouldSkipProxy = (url: string) => {
@@ -35,14 +35,14 @@ const ProxyImg = (props: Props) => {
       !props.src.startsWith("data:image") &&
       (!shouldSkipProxy(props.src) || props.width)
     ) {
-      const originalSrc = props.src
-      if (props.width) {
-        const width = props.width * 2
-        const resizeType = props.square ? "fill" : "fit"
-        mySrc = `https://imgproxy.iris.to/insecure/rs:${resizeType}:${width}:${width}/plain/${originalSrc}`
-      } else {
-        mySrc = `https://imgproxy.iris.to/insecure/plain/${originalSrc}`
-      }
+      // const originalSrc = props.src
+      // if (props.width) {
+      //   const width = props.width * 2
+      //   const resizeType = props.square ? "fill" : "fit"
+      //   mySrc = `https://imgproxy.etch.social/insecure/rs:${resizeType}:${width}:${width}/plain/${originalSrc}`
+      // } else {
+      //   mySrc = `https://imgproxy.etch.social/insecure/plain/${originalSrc}`
+      // }
       setSrc(mySrc)
     }
   }, [props.src, props.width, props.square])

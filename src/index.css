@@ -43,12 +43,12 @@ html {
 
 /* Etch theme */
 [data-theme="etch"] .btn-primary {
-  background: #ff3f15;
+  background: #6384cb;
 }
 
 [data-theme="etch"] .btn-primary:hover {
-  background: #ff3f15;
-  box-shadow: 0 0 10px #ff3f15;
+  background: #4f77ce;
+  box-shadow: 0 0 10px #4470ce;
 }
 
 iframe {
@@ -61,19 +61,16 @@ iframe {
   height: 8px;
 }
 
-::-webkit-scrollbar-track {
-  background: #34216c;
-}
 
 ::-webkit-scrollbar-thumb {
-  background-color: #702ace;
+  background-color: #345ec7;
   border-radius: 4px;
 }
 
 /* Firefox scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #702ace #34216c; /* Thumb and track color */
+  scrollbar-color: #3563cf; /* Thumb and track color */
 }
 
 /* src/shared/styles/scrollbar.css */
@@ -129,3 +126,9 @@ iframe {
 .MuiTab-root.Mui-selected {
   color: #c6c8d3 !important;
 }
+
+a {
+  margin-left: 0.3rem;
+  margin-right: 0.3rem;
+}
+

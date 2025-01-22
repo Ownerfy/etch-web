@@ -5,15 +5,14 @@ import ReCAPTCHA from "react-google-recaptcha"
 import {useLocalState} from "irisdb-hooks"
 import {localState} from "irisdb"
 import {ndk} from "irisdb-nostr"
-
-const NSEC_NPUB_REGEX = /(nsec1|npub1)[a-zA-Z0-9]{20,65}/gi
+import axios from "axios"
 
 interface SignUpProps {
   onClose: () => void
 }
 
 export default function SignUp({onClose}: SignUpProps) {
-  const [username, setusername] = useState("")
+  const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
   const [password, setPassword] = useState("")
@@ -24,10 +23,11 @@ export default function SignUp({onClose}: SignUpProps) {
   const [submitError, setSubmitError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [isChecked, setIsChecked] = useState(false)
+  const [isAgeConfirmed, setIsAgeConfirmed] = useState(false)
   const [, setShowLoginDialog] = useLocalState("home/showLoginDialog", false)
+  const [, setShowWelcomeDialog] = useLocalState("home/showWelcomeDialog", false)
   const inputRef = useRef<HTMLInputElement>(null)
-
-  console.log("google key is::", import.meta.env.VITE_GOOGLE_CAPTCHA_SITE_KEY)
+  const [isUsernameAvailable, setIsUsernameAvailable] = useState(true)
 
   useEffect(() => {
     if (inputRef.current) {
@@ -35,8 +35,56 @@ export default function SignUp({onClose}: SignUpProps) {
     }
   }, [inputRef.current])
 
+  useEffect(() => {
+    const checkUsernameAvailability = async () => {
+      if (username) {
+        try {
+          const response = await axios.get(
+            `${import.meta.env.VITE_FUNCTIONS_URL}api/checkUsernameDuplication/${username}`
+          )
+
+          if (response.data.duplicated) {
+            setIsUsernameAvailable(false)
+            setNameError("Username is already taken.")
+          } else {
+            setIsUsernameAvailable(true)
+            setNameError("")
+          }
+        } catch (error) {
+          console.error("Error checking username availability", error)
+        }
+      }
+    }
+
+    const debounceTimeout = setTimeout(() => {
+      checkUsernameAvailability()
+    }, 2000)
+
+    return () => clearTimeout(debounceTimeout)
+  }, [username])
+
   function onNameChange(e: ChangeEvent<HTMLInputElement>) {
-    setusername(e.target.value)
+    setUsername(e.target.value)
+  }
+
+  function validateEmail(email: string) {
+    if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      setEmailError("Invalid email format.")
+    } else {
+      setEmailError("")
+    }
+  }
+
+  function validatePassword(password: string, confirmPassword: string) {
+    if (password.length < 10) {
+      setPasswordError(
+        "Password must be at least 10 characters long. Short sentences make great passwords."
+      )
+    } else if (password !== confirmPassword) {
+      setPasswordError("Passwords do not match.")
+    } else {
+      setPasswordError("")
+    }
   }
 
   function onEmailChange(e: ChangeEvent<HTMLInputElement>) {
@@ -51,6 +99,14 @@ export default function SignUp({onClose}: SignUpProps) {
     setConfirmPassword(e.target.value)
   }
 
+  function onEmailBlur() {
+    validateEmail(email)
+  }
+
+  function onConfirmPasswordBlur() {
+    validatePassword(password, confirmPassword)
+  }
+
   const verifyCaptcha = (res: string | null) => {
     setCaptchaToken(res)
   }
@@ -63,6 +119,10 @@ export default function SignUp({onClose}: SignUpProps) {
     setIsChecked(e.target.checked)
   }
 
+  const handleAgeCheckboxChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setIsAgeConfirmed(e.target.checked)
+  }
+
   async function onNewUserLogin(e: FormEvent) {
     e.preventDefault()
     setIsLoading(true)
@@ -70,33 +130,21 @@ export default function SignUp({onClose}: SignUpProps) {
 
     let valid = true
 
-    if (username.match(NSEC_NPUB_REGEX)) {
-      setNameError("Invalid username format.")
-      valid = false
-    } else if (username.length < 4) {
+    if (username.length < 4) {
       setNameError("Username must be at least 4 characters long.")
+      valid = false
+    } else if (!isUsernameAvailable) {
+      setNameError("Username is already taken.")
       valid = false
     } else {
       setNameError("")
     }
 
-    if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-      setEmailError("Invalid email format.")
-      valid = false
-    } else {
-      setEmailError("")
-    }
+    validateEmail(email)
+    validatePassword(password, confirmPassword)
 
-    if (password.length < 12) {
-      setPasswordError(
-        "Password must be at least 10 characters long. Short sentences make great passwords."
-      )
+    if (emailError || passwordError) {
       valid = false
-    } else if (password !== confirmPassword) {
-      setPasswordError("Passwords do not match.")
-      valid = false
-    } else {
-      setPasswordError("")
     }
 
     if (valid && username && email && password) {
@@ -110,7 +158,6 @@ export default function SignUp({onClose}: SignUpProps) {
           captchaToken,
         })
 
-        console.log("privKey and pubKey", privKey, nostrPubKey)
         localState.get("user/privateKey").put(privKey)
         localState.get("user/publicKey").put(nostrPubKey)
         const privateKeySigner = new NDKPrivateKeySigner(privKey)
@@ -119,12 +166,18 @@ export default function SignUp({onClose}: SignUpProps) {
         profileEvent.kind = 0
         profileEvent.content = JSON.stringify({
           display_name: username,
+          nip05: `${username}@etch.social`,
         })
 
         profileEvent.publish()
         setShowLoginDialog(false)
-      } catch (error) {
-        setSubmitError("An error occurred during sign up. Please try again.")
+        setShowWelcomeDialog(true)
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          setSubmitError(`An error occurred: ${error.message}`)
+        } else {
+          setSubmitError("An error occured. Try again or contact support.")
+        }
       }
     }
 
@@ -156,6 +209,7 @@ export default function SignUp({onClose}: SignUpProps) {
           placeholder="Email"
           value={email}
           onChange={(e) => onEmailChange(e)}
+          onBlur={onEmailBlur}
         />
         {emailError && <p className="text-red-500">{emailError}</p>}
         <input
@@ -171,6 +225,7 @@ export default function SignUp({onClose}: SignUpProps) {
           placeholder="Confirm Password"
           value={confirmPassword}
           onChange={(e) => onConfirmPasswordChange(e)}
+          onBlur={onConfirmPasswordBlur}
         />
         {passwordError && <p className="text-red-500">{passwordError}</p>}
         <div>
@@ -189,7 +244,7 @@ export default function SignUp({onClose}: SignUpProps) {
           />
           <label className="text-sm">
             I agree to the{" "}
-            <a href="/tos" className="text-blue-500 underline">
+            <a href="/terms" className="text-blue-500 underline">
               TOS
             </a>{" "}
             and{" "}
@@ -198,10 +253,19 @@ export default function SignUp({onClose}: SignUpProps) {
             </a>
           </label>
         </div>
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={isAgeConfirmed}
+            onChange={handleAgeCheckboxChange}
+            className="checkbox"
+          />
+          <label className="text-sm">I confirm that I am 18 years of age or older</label>
+        </div>
         <button
           className="btn btn-primary"
           type="submit"
-          disabled={isLoading || !isChecked}
+          disabled={isLoading || !isChecked || !isAgeConfirmed}
         >
           {isLoading ? "Loading..." : "Go"}
         </button>

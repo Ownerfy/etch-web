@@ -58,12 +58,12 @@ function Settings() {
           message: "Content",
           path: "/settings/content",
         },
-        {
-          icon: "bell-outline",
-          iconBg: "bg-green-500",
-          message: "Notifications",
-          path: "/settings/notifications",
-        },
+        // {
+        //   icon: "bell-outline",
+        //   iconBg: "bg-green-500",
+        //   message: "Notifications",
+        //   path: "/settings/notifications",
+        // },
         {
           icon: "closedeye",
           iconBg: "bg-red-500",

@@ -18,7 +18,7 @@ declare global {
 // TODO split into smaller components
 class IrisAccount extends Component {
   state = {
-    irisToActive: false,
+    etchSocialActive: false,
     existing: null as any,
     profile: null as any,
     newUserName: "",
@@ -31,14 +31,14 @@ class IrisAccount extends Component {
   render() {
     let view: any
 
-    if (this.state.irisToActive) {
+    if (this.state.etchSocialActive) {
       const username = this.state.profile?.nip05.split("@")[0]
       view = <AccountName name={username} />
     } else if (this.state.existing && this.state.existing.confirmed) {
       view = (
         <ActiveAccount
           name={this.state.existing.name}
-          setAsPrimary={() => this.setState({irisToActive: true})}
+          setAsPrimary={() => this.setState({etchSocialActive: true})}
         />
       )
     } else if (this.state.existing) {
@@ -71,8 +71,12 @@ class IrisAccount extends Component {
     } else {
       view = (
         <div>
-          <p>Register an Etch username (etch.social/username)</p>
-          <form className="flex flex-col gap-4" onSubmit={(e) => this.showChallenge(e)}>
+          <p>
+            Your etch username is ${this.state.profile?.nip05?.split("@")[0]}. On other
+            nostr compatible apps you can be found with ${this.state.profile?.nip05}. This
+            not an email!
+          </p>
+          {/* <form className="flex flex-col gap-4" onSubmit={(e) => this.showChallenge(e)}>
             <div className="flex flex-row gap-4">
               <input
                 className="input input-bordered"
@@ -95,7 +99,7 @@ class IrisAccount extends Component {
                 <span className="error">{this.state.invalidUsernameMessage}</span>
               )}
             </div>
-          </form>
+          </form> */}
         </div>
       )
     }
@@ -147,7 +151,7 @@ class IrisAccount extends Component {
 
   checkAvailabilityFromAPI = async (name: string) => {
     const res = await fetch(
-      `https://api.iris.to/user/available?name=${encodeURIComponent(name)}`
+      `https://api.etch.social/user/available?name=${encodeURIComponent(name)}`
     )
     if (name !== this.state.newUserName) {
       return
@@ -195,10 +199,10 @@ class IrisAccount extends Component {
     console.log("register", cfToken)
     const event = new NDKEvent(ndk())
     event.kind = 1
-    event.content = `iris.to/${this.state.newUserName}`
+    event.content = `etch.social/${this.state.newUserName}`
     await event.sign()
-    // post signed event as request body to https://api.iris.to/user/confirm_user
-    const res = await fetch("https://api.iris.to/user/signup", {
+    // post signed event as request body to https://api.etch.social/user/confirm_user
+    const res = await fetch("https://api.etch.social/user/signup", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -229,10 +233,10 @@ class IrisAccount extends Component {
   async enableReserved() {
     const event = new NDKEvent(ndk())
     event.kind = 1
-    event.content = `iris.to/${this.state.newUserName}`
+    event.content = `etch.social/${this.state.newUserName}`
     await event.sign()
-    // post signed event as request body to https://api.iris.to/user/confirm_user
-    const res = await fetch("https://api.iris.to/user/confirm_user", {
+    // post signed event as request body to https://api.etch.social/user/confirm_user
+    const res = await fetch("https://api.etch.social/user/confirm_user", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -259,16 +263,16 @@ class IrisAccount extends Component {
   async declineReserved() {
     if (
       !window.confirm(
-        `Are you sure you want to decline iris.to/${this.state.newUserName}?`
+        `Are you sure you want to decline etch.social/${this.state.newUserName}?`
       )
     ) {
       return
     }
     const event = new NDKEvent(ndk())
     event.kind = 1
-    event.content = `decline iris.to/${this.state.newUserName}`
+    event.content = `decline etch.social/${this.state.newUserName}`
     await event.sign()
-    const res = await fetch("https://api.iris.to/user/decline_user", {
+    const res = await fetch("https://api.etch.social/user/decline_user", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -293,10 +297,10 @@ class IrisAccount extends Component {
     localState.get("user/publicKey").on((myPub) => {
       if (myPub && typeof myPub === "string") {
         const profile = profileCache.get(myPub) || {}
-        const irisToActive =
-          profile && profile.nip05 && profile.nip05.endsWith("@iris.to")
-        this.setState({profile, irisToActive})
-        if (profile && !irisToActive) {
+        const etchSocialActive =
+          profile && profile.nip05 && profile.nip05.endsWith("@etch.social")
+        this.setState({profile, etchSocialActive})
+        if (profile && !etchSocialActive) {
           this.checkExistingAccount(myPub)
         }
       }
@@ -306,7 +310,7 @@ class IrisAccount extends Component {
   }
 
   async checkExistingAccount(pub: any) {
-    const res = await fetch(`https://api.iris.to/user/find?public_key=${pub}`)
+    const res = await fetch(`https://api.etch.social/user/find?public_key=${pub}`)
     if (res.status === 200) {
       const json = await res.json()
       this.setState({existing: json})

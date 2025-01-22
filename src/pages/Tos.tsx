@@ -4,20 +4,20 @@ export const TOS = () => {
       <div className="flex flex-1">
         <div className="prose max-w-prose">
           <h1>TERMS OF SERVICE</h1>
-          <p>Last Updated: [Date]</p>
+          <p>Last Updated: Jan 18, 2025</p>
           <p>
-            Welcome to [Social Media Name] (“the Service,” “we,” “us,” or “our”). By
-            accessing or using our Service, you agree to these Terms of Service (“Terms”).
-            If you do not agree, do not access or use the Service. Please read these Terms
-            carefully.
+            Welcome to Etch.Social (“the Service,” “we,” “us,” or “our”), operated by
+            Ownerfy Inc. By accessing or using our Service, you agree to these Terms of
+            Service (“Terms”). If you do not agree, do not access or use the Service.
+            Please read these Terms carefully.
           </p>
           <h2>1. OVERVIEW OF OUR SERVICE</h2>
           <h3>1.1 Description</h3>
           <p>
-            [Social Media Name] is a social networking platform similar to Twitter and
-            TikTok with additional blockchain and Nostr protocol components. You can post
-            content (“User Content”), communicate with other users, and earn or purchase
-            credits for certain features.
+            Etch.Social is a social networking platform similar to Twitter and TikTok with
+            additional blockchain and Nostr protocol components. You can post content
+            (“User Content”), communicate with other users, and earn or purchase credits
+            for certain features.
           </p>
           <h3>1.2 Data on the Blockchain or Nostr Protocol</h3>
           <p>
@@ -126,14 +126,15 @@ export const TOS = () => {
           <h3>6.1 Our Ownership</h3>
           <p>
             All content provided by us (excluding User Content) and all related
-            intellectual property rights are owned by or licensed to [Social Media Name].
+            intellectual property rights are owned by or licensed to Ownerfy Inc. d/b/a
+            Etch.Social.
           </p>
           <h3>6.2 User Content License</h3>
           <p>
-            By posting User Content, you grant [Social Media Name] a worldwide,
-            non-exclusive, royalty-free license to use, host, store, reproduce, modify,
-            adapt, publish, and distribute such content in connection with operating and
-            providing the Service.
+            By posting User Content, you grant Ownerfy Inc. a worldwide, non-exclusive,
+            royalty-free license to use, host, store, reproduce, modify, adapt, publish,
+            and distribute such content in connection with operating and providing the
+            Service.
           </p>
           <h3>6.3 Copyright or Trademark Infringement Claims</h3>
           <p>
@@ -186,15 +187,16 @@ export const TOS = () => {
           </p>
           <h3>9.2 Limitation of Liability</h3>
           <p>
-            To the fullest extent permitted by applicable law, [Social Media Name] and its
-            affiliates, directors, employees, and agents shall not be liable for any
-            indirect, incidental, special, consequential, or punitive damages, or any loss
-            of profits or revenues, arising from or related to your use of the Service.
+            To the fullest extent permitted by applicable law, Ownerfy Inc., Etch.Social,
+            and their affiliates, directors, employees, and agents shall not be liable for
+            any indirect, incidental, special, consequential, or punitive damages, or any
+            loss of profits or revenues, arising from or related to your use of the
+            Service.
           </p>
           <h3>9.3 Indemnification</h3>
           <p>
-            You agree to defend, indemnify, and hold harmless [Social Media Name], its
-            affiliates, directors, employees, and agents from any claims, liabilities,
+            You agree to defend, indemnify, and hold harmless Ownerfy Inc., Etch.Social,
+            its affiliates, directors, employees, and agents from any claims, liabilities,
             damages, costs, or expenses (including reasonable attorneys’ fees) arising
             from or related to (a) your use of the Service, (b) your breach of these
             Terms, or (c) your violation of any law or regulation.
@@ -228,7 +230,7 @@ export const TOS = () => {
           <h3>12.2 Entire Agreement</h3>
           <p>
             These Terms, along with our Privacy Policy, constitute the entire agreement
-            between you and [Social Media Name] regarding your use of the Service.
+            between you and Ownerfy Inc. regarding your use of Etch.Social.
           </p>
           <h3>12.3 No Waiver</h3>
           <p>
@@ -237,11 +239,22 @@ export const TOS = () => {
           </p>
           <h3>12.4 Contact Us</h3>
           <p>If you have any questions about these Terms, please contact us at:</p>
-          <p>[Email Address]</p>
-          <p>[Mailing Address]</p>
           <p>
-            BY ACCESSING OR USING THE SERVICE, YOU ACKNOWLEDGE THAT YOU HAVE READ,
-            UNDERSTOOD, AND AGREE TO BE BOUND BY THESE TERMS.
+            Email: support@ownerfy.com
+            <br />
+            Mailing Address:
+            <br />
+            8 The Green STE A
+            <br />
+            Kent County
+            <br />
+            Dover, DE 19901
+            <br />
+            United States
+          </p>
+          <p>
+            BY USING ETCH.SOCIAL, YOU ACKNOWLEDGE THAT YOU HAVE READ, UNDERSTOOD, AND
+            AGREE TO THIS PRIVACY POLICY.
           </p>
         </div>
       </div>

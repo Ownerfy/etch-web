@@ -208,7 +208,7 @@ function NotificationsFeed() {
       window.Notification.permission !== "granted" &&
       window.Notification.permission !== "denied"
     ) {
-      window.Notification.requestPermission()
+      // window.Notification.requestPermission() TODO: re-enable notifications later
     }
 
     // ... existing effect logic ...

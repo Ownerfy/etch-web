@@ -126,7 +126,7 @@ export function ProfileSettings() {
             onUpload={(url) => setProfileField("banner", url)}
           />
         </label>
-        <label className="form-control w-full max-w-xs">
+        {/* <label className="form-control w-full max-w-xs">
           <div className="label">
             <span className="label-text">Lightning address</span>
           </div>
@@ -137,10 +137,10 @@ export function ProfileSettings() {
             value={newProfile?.lud16}
             onChange={(e) => setProfileField("lud16", e.target.value)}
           />
-        </label>
+        </label> */}
         <label className="form-control w-full max-w-xs">
           <div className="label">
-            <span className="label-text">Website</span>
+            <span className="label-text">Web Link</span>
           </div>
           <input
             type="text"
@@ -148,18 +148,6 @@ export function ProfileSettings() {
             className="input input-bordered w-full max-w-xs"
             value={newProfile?.website}
             onChange={(e) => setProfileField("website", e.target.value)}
-          />
-        </label>
-        <label className="form-control w-full max-w-xs">
-          <div className="label">
-            <span className="label-text">NIP-05 Verification</span>
-          </div>
-          <input
-            type="text"
-            placeholder="Nip-05 verification"
-            className="input input-bordered w-full max-w-xs"
-            value={newProfile?.nip05}
-            onChange={(e) => setProfileField("nip05", e.target.value)}
           />
         </label>
         <label className="form-control w-full max-w-xs">

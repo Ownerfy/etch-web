@@ -6,7 +6,7 @@ export default {
         "theme-xl": "4px 20px 40px 1px var(--shadow-color)",
       },
       colors: {
-        "custom-purple": "#34216c",
+        "custom-purple": "#3b6ea5",
         "custom-violet": "#28246b",
         "custom-accent": "#db8216",
       },

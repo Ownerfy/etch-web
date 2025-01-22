@@ -14,12 +14,11 @@
   "repository": "https://github.com/Ownerfy/etch-web",
   "features": {
     "git": false,
-    "cashu": true,
     "pushNotifications": true,
     "analytics": true
   },
   "defaultSettings": {
     "youtubePrivacyMode": false,
-    "notificationServer": "https://notifications.iris.to"
+    "notificationServer": "https://notifications.etch.social"
   }
 }

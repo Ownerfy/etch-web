@@ -36,11 +36,18 @@ function SmallThumbnailComponent({match, event}: SmallThumbnailComponentProps) {
       {error ? (
         <RiVideoLine className="w-12 h-12" />
       ) : (
+        // <img TODO: bring this back when proxy server is up
+        //   onClick={onClick}
+        //   onError={() => setError(true)}
+        //   className={classNames("rounded w-24 h-24", {"blur-xl": blur})}
+        //   src={`https://imgproxy.etch.social/thumbnail/192/${match}`}
+        //   alt="thumbnail"
+        // />
         <img
           onClick={onClick}
           onError={() => setError(true)}
           className={classNames("rounded w-24 h-24", {"blur-xl": blur})}
-          src={`https://imgproxy.iris.to/thumbnail/192/${match}`}
+          src={match}
           alt="thumbnail"
         />
       )}

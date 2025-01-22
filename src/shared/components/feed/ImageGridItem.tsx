@@ -42,7 +42,9 @@ export const ImageGridItem = ({
 
   return urls.map((url, i) => {
     const isVideo = !imageMatch
-    const proxyUrl = isVideo ? `https://imgproxy.iris.to/thumbnail/638/${url}` : url
+    // Getting rid of this only works if you have no poster/cover images for videos
+    //const proxyUrl = isVideo ? `https://imgproxy.etch.social/thumbnail/638/${url}` : url // TODO: bring this back when proxy server is up
+    const proxyUrl = url // Maybe this works since I switched the imgproxy back to just showing video
 
     const shouldBlur =
       blurNSFW &&
@@ -62,13 +64,23 @@ export const ImageGridItem = ({
         }}
         ref={i === urls.length - 1 ? lastElementRef : undefined}
       >
-        <ProxyImg
-          square={true}
-          width={319}
-          src={proxyUrl}
-          alt=""
-          className="w-full h-full object-cover"
-        />
+        {/* TODP: This was added because we don't have a proxy server that can generate thumbs */}
+        {isVideo ? (
+          <video
+            width="319"
+            className="w-full h-full object-cover"
+            controls
+            src={proxyUrl}
+          />
+        ) : (
+          <ProxyImg
+            square={true}
+            width={319}
+            src={proxyUrl}
+            alt=""
+            className="w-full h-full object-cover"
+          />
+        )}
         {isVideo && (
           <div className="absolute top-0 right-0 m-2 shadow-md shadow-gray-500">
             <Icon

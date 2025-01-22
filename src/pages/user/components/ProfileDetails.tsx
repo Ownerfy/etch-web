@@ -62,8 +62,10 @@ function ProfileDetails({
         .then((isValid) => {
           console.log("isValid", isValid)
           setNIP05valid(isValid ?? false)
-          if (isValid && displayProfile.nip05?.endsWith("@iris.to")) {
-            navigate(`/${displayProfile.nip05.replace("@iris.to", "")}`, {replace: true})
+          if (isValid && displayProfile.nip05?.endsWith("@etch.social")) {
+            navigate(`/${displayProfile.nip05.replace("@etch.social", "")}`, {
+              replace: true,
+            })
           }
         })
         .catch((error) => console.warn(error))

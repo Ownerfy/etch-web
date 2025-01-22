@@ -40,34 +40,34 @@ registerRoute(
 )
 
 // Avatars
-registerRoute(
-  ({request, url}) => {
-    return (
-      request.destination === "image" &&
-      url.href.startsWith("https://imgproxy.iris.to/") &&
-      (url.pathname.includes(
-        `rs:fill:${PROFILE_AVATAR_WIDTH * 2}:${PROFILE_AVATAR_WIDTH * 2}`
-      ) ||
-        url.pathname.includes(
-          `rs:fill:${EVENT_AVATAR_WIDTH * 2}:${EVENT_AVATAR_WIDTH * 2}`
-        ))
-    )
-  },
-  new CacheFirst({
-    cacheName: "avatar-cache",
-    plugins: [
-      new ExpirationPlugin({
-        maxEntries: 100, // gif avatars can still be large
-        matchOptions: {
-          ignoreVary: true,
-        },
-      }),
-      new CacheableResponsePlugin({
-        statuses: [0, 200],
-      }),
-    ],
-  })
-)
+// registerRoute(
+//   ({request, url}) => {
+//     return (
+//       request.destination === "image" &&
+//       url.href.startsWith("https://imgproxy.etch.social/") &&
+//       (url.pathname.includes(
+//         `rs:fill:${PROFILE_AVATAR_WIDTH * 2}:${PROFILE_AVATAR_WIDTH * 2}`
+//       ) ||
+//         url.pathname.includes(
+//           `rs:fill:${EVENT_AVATAR_WIDTH * 2}:${EVENT_AVATAR_WIDTH * 2}`
+//         ))
+//     )
+//   },
+//   new CacheFirst({
+//     cacheName: "avatar-cache",
+//     plugins: [
+//       new ExpirationPlugin({
+//         maxEntries: 100, // gif avatars can still be large
+//         matchOptions: {
+//           ignoreVary: true,
+//         },
+//       }),
+//       new CacheableResponsePlugin({
+//         statuses: [0, 200],
+//       }),
+//     ],
+//   })
+// )
 
 // Cache images from any domain with size limit
 registerRoute(

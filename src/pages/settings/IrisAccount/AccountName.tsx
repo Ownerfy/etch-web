@@ -29,7 +29,7 @@ export default function AccountName({name = "", link = true}: AccountNameProps) 
         )}
       </div>
       <div>
-        Nostr address (nip05): <b>{name}@etch.social</b>
+        Global Nostr address (nip05): <b>{name}@etch.social</b>
       </div>
     </>
   )

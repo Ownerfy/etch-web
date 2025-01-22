@@ -2,6 +2,7 @@ import {createBrowserRouter, createRoutesFromElements, Route} from "react-router
 
 import NostrLinkHandler from "@/pages/NostrLinkHandler.tsx"
 import Notifications from "./notifications/Notifications"
+import {PrivacyPolicy} from "@/pages/PrivacyPolicy"
 import Explorer from "@/pages/explorer/Explorer"
 import Layout from "@/shared/components/Layout"
 import WalletPage from "./wallet/WalletPage"
@@ -11,6 +12,7 @@ import MessagesPage from "@/pages/messages"
 import {AboutPage} from "@/pages/HelpPage"
 import SearchPage from "@/pages/search"
 import HomePage from "@/pages/home"
+import {TOS} from "@/pages/Tos"
 
 export const router = createBrowserRouter(
   createRoutesFromElements([
@@ -23,6 +25,8 @@ export const router = createBrowserRouter(
       <Route path="/explorer/:file?" element={<Explorer />} />
       <Route path="/search/:query?" element={<SearchPage />} />
       <Route path="/about" element={<AboutPage />} />
+      <Route path="/terms" element={<TOS />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/404" element={<Page404 />} />
       <Route path="/:link/*" element={<NostrLinkHandler />} />
     </Route>,

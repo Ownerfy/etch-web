@@ -160,7 +160,7 @@ function HomeFeedEvents() {
           ))}
         </div>
       )}
-      <NotificationPrompt />
+      {/* <NotificationPrompt TODO: Re-enable push notifications later/> */}
       <Feed
         key={activeTab === "unseen" ? "unseen" : "other"}
         filters={filters}

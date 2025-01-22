@@ -74,13 +74,13 @@ const NotificationSettings = () => {
   }, [])
 
   const requestNotificationPermission = () => {
-    Notification.requestPermission().then((permission) => {
-      const allowed = permission === "granted"
-      setNotificationsAllowed(allowed)
-      if (!allowed) {
-        alert("Please allow notifications in your browser settings and try again.")
-      }
-    })
+    // Notification.requestPermission().then((permission) => { // TODO: re-enable notifications later
+    //   const allowed = permission === "granted"
+    //   setNotificationsAllowed(allowed)
+    //   if (!allowed) {
+    //     alert("Please allow notifications in your browser settings and try again.")
+    //   }
+    // })
   }
 
   const fireTestNotification = () => {

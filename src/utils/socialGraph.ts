@@ -204,7 +204,6 @@ const throttledRecalculate = throttle(
 
 export const socialGraphLoaded = new Promise((resolve) => {
   localState.get("user/publicKey").on(async (publicKey?: string) => {
-    console.log("publicKey", publicKey)
     await initializeInstance(publicKey)
     resolve(true)
     if (publicKey) {
@@ -280,7 +279,7 @@ export const loadFromFile = (merge = false) => {
 }
 
 export const downloadLargeGraph = () => {
-  fetch("https://files.iris.to/large_social_graph.json")
+  fetch("https://files.etch.social/large_social_graph.json")
     .then((response) => response.json())
     .then((data) => {
       instance = new SocialGraph(instance.getRoot(), data)

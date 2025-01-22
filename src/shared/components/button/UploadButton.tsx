@@ -1,6 +1,6 @@
 import React, {useRef, useState} from "react"
 
-import {uploadFile} from "@/shared/upload"
+import {uploadToFirebaseStorage} from "@/shared/upload"
 
 type Props = {
   onUpload: (url: string) => void
@@ -34,7 +34,7 @@ const UploadButton = ({
       setProgress(0)
       setErrorMessage(null)
       const file = e.target.files[0]
-      const url = await uploadFile(file, (progress) => {
+      const url = await uploadToFirebaseStorage(file, (progress) => {
         setProgress(progress)
       })
       onUpload(url)

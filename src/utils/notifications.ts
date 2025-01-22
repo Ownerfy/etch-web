@@ -148,7 +148,7 @@ export async function subscribeToNotifications() {
   if ("Notification" in window) {
     try {
       if (Notification.permission !== "granted") {
-        await Notification.requestPermission()
+        // await Notification.requestPermission() TODO: re-enable notifications later
       }
     } catch (e) {
       console.error(e)
