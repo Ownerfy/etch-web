@@ -2,6 +2,7 @@ import {ChangeEvent, DragEvent, useEffect, useState} from "react"
 import {uploadToFirebaseStorage} from "@/shared/upload"
 import {NDKEvent, NDKTag} from "@nostr-dev-kit/ndk"
 import {useLocalState} from "irisdb-hooks"
+import {drawText} from "canvas-txt"
 import {ndk} from "irisdb-nostr"
 
 import UploadButton from "@/shared/components/button/UploadButton.tsx"
@@ -21,6 +22,34 @@ interface NoteCreatorProps {
   quotedEvent?: NDKEvent
   handleClose: handleCloseFunction
   reset?: boolean
+}
+
+async function generateTextImage(text: string, leftAligned: boolean) {
+  console.log("running generateTextNft")
+  const canvas = document.createElement("canvas")
+  canvas.width = 600
+  canvas.height = 600
+
+  const ctx = canvas.getContext("2d")
+  if (!ctx) return ""
+
+  ctx.fillStyle = "white"
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+  ctx.fillStyle = "black"
+  const {height} = drawText(ctx, text, {
+    x: 26,
+    y: 40,
+    width: 545,
+    height: 540,
+    fontSize: 24,
+    lineHeight: 32,
+    align: leftAligned ? "left" : "center",
+    font: "Courier",
+  })
+
+  console.log(`Total height = ${height}`)
+  return canvas.toDataURL()
 }
 
 function addPTags(event: NDKEvent, repliedEvent?: NDKEvent, quotedEvent?: NDKEvent) {
@@ -94,6 +123,7 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
   )
 
   const [textarea, setTextarea] = useState<HTMLTextAreaElement | null>(null)
+  const [previewImageUrl, setPreviewImageUrl] = useState<string>("")
 
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
@@ -104,6 +134,23 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
   const [publishAsNft, setPublishAsNft] = useState(false)
   const [customTitleCheckbox, setCustomTitleCheckbox] = useState(false)
   const [customTitle, setCustomTitle] = useState("")
+
+  const [isLeftAligned, setIsLeftAligned] = useState(false)
+
+  function refreshImagePreviewUrl(isNft: boolean) {
+    // If we see no "http" in noteContent, generate a text image.
+    if (!noteContent.match(/http/) && isNft) {
+      generateTextImage(noteContent, isLeftAligned)
+        .then(setPreviewImageUrl)
+        .catch(console.error)
+    } else {
+      setPreviewImageUrl("")
+    }
+  }
+
+  useEffect(() => {
+    refreshImagePreviewUrl(publishAsNft)
+  }, [noteContent, isLeftAligned])
 
   const handleContentChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     setNoteContent(event.target.value)
@@ -276,18 +323,38 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
             <input
               type="checkbox"
               checked={publishAsNft}
-              onChange={() => setPublishAsNft(!publishAsNft)}
+              onChange={() => {
+                setCustomTitleCheckbox(!publishAsNft)
+                setPublishAsNft(!publishAsNft)
+                refreshImagePreviewUrl(!publishAsNft)
+              }}
             />
             <span>Publish as NFT</span>
           </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={customTitleCheckbox}
-              onChange={() => setCustomTitleCheckbox(!customTitleCheckbox)}
-            />
-            <span>Custom Title</span>
-          </label>
+          {publishAsNft && (
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={customTitleCheckbox}
+                onChange={() => setCustomTitleCheckbox(!customTitleCheckbox)}
+              />
+
+              <span>Custom Title</span>
+            </label>
+          )}
+          {publishAsNft && (
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isLeftAligned}
+                onChange={() => {
+                  setIsLeftAligned(!isLeftAligned)
+                  refreshImagePreviewUrl(publishAsNft)
+                }}
+              />
+              <span>Left Align Text</span>
+            </label>
+          )}
         </div>
 
         {publishAsNft && (
@@ -305,13 +372,23 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
           />
         )}
 
-        <div className="mt-4 min-h-16 max-h-96 overflow-y-scroll">
+        <div className="mt-4 min-h-16 overflow-y-scroll">
           <div className="text-sm uppercase text-gray-500 mb-5 font-bold">Preview</div>
 
           {customTitleCheckbox && customTitle.trim() && (
-            <div className="text-sm mb-2 font-bold">{customTitle}</div>
+            <div className="mx-auto text-sm mb-8 font-bold">{customTitle}</div>
           )}
-          <HyperText>{noteContent}</HyperText>
+
+          {/* If we have a generated image URL, show it */}
+          {previewImageUrl && (
+            <img
+              src={previewImageUrl}
+              alt="Generated NFT"
+              className="mx-auto mb-2 max-w-[400px] h-auto"
+            />
+          )}
+
+          {!previewImageUrl && <HyperText>{noteContent}</HyperText>}
         </div>
       </div>
     </div>
@@ -319,3 +396,50 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
 }
 
 export default NoteCreator
+
+// 1) Make generateTextImage return the generated Data URL.
+// 2) Track a previewImageUrl state. If no file upload (or no URL in noteContent), generate a text image.
+
+// async function generateTextImage(text: string) {
+//   const canvas = createCanvas(600, 600);
+//   const ctx = canvas.getContext('2d');
+//   ctx.fillStyle = 'blue';
+//   ctx.fillRect(0, 0, 600, 600);
+//   ctx.fillStyle = 'black';
+//   drawText(ctx, text, { x: 30, y: 30, width: 540, height: 540, fontSize: 24, font: 'Courier' });
+//   return canvas.toDataURL();
+// }
+
+// function NoteCreator({ handleClose, quotedEvent, repliedEvent }: NoteCreatorProps) {
+//   ...
+//   const [previewImageUrl, setPreviewImageUrl] = useState<string>("");
+
+//   useEffect(() => {
+//     // If we see no "http" in noteContent, generate a text image.
+//     if (!noteContent.match(/http/)) {
+//       generateTextImage(noteContent).then(setPreviewImageUrl).catch(console.error);
+//     } else {
+//       setPreviewImageUrl("");
+//     }
+//   }, [noteContent]);
+
+//   return (
+//     <div ...>
+//       ...
+//       <div className="mt-4 min-h-16 max-h-96 overflow-y-scroll">
+//         <div className="text-sm uppercase text-gray-500 mb-5 font-bold">Preview</div>
+
+//         {customTitleCheckbox && customTitle.trim() && (
+//           <div className="text-sm mb-2 font-bold">{customTitle}</div>
+//         )}
+
+//         {/* If we have a generated image URL, show it */}
+//         {previewImageUrl && (
+//           <img src={previewImageUrl} alt="Generated NFT" className="mb-2 max-w-full h-auto" />
+//         )}
+
+//         <HyperText>{noteContent}</HyperText>
+//       </div>
+//     </div>
+//   );
+// }
