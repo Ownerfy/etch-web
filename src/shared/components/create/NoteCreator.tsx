@@ -31,7 +31,6 @@ function addPTags(event: NDKEvent, repliedEvent?: NDKEvent, quotedEvent?: NDKEve
   if (event.pubkey) {
     uniquePTags.add(event.pubkey)
   }
-
   // Process existing tags
   event.tags.forEach((tag) => {
     if (tag[0] === "p" && tag[1]?.trim()) {
@@ -42,7 +41,6 @@ function addPTags(event: NDKEvent, repliedEvent?: NDKEvent, quotedEvent?: NDKEve
       otherTags.push(tag)
     }
   })
-
   // Add p-tags from events and e-tag the events themselves
   if (repliedEvent) {
     if (repliedEvent.pubkey?.trim()) {
@@ -73,7 +71,6 @@ function addPTags(event: NDKEvent, repliedEvent?: NDKEvent, quotedEvent?: NDKEve
       }
     })
   }
-
   // Filter out any empty values and reconstruct tags array
   const validPTags = Array.from(uniquePTags).filter(Boolean)
   const validETags = Array.from(uniqueETags).filter(Boolean)
@@ -101,8 +98,12 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadError, setUploadError] = useState<string | null>(null)
-
   const [isDraggingOver, setIsDraggingOver] = useState(false)
+
+  // New state for checkboxes and custom title
+  const [publishAsNft, setPublishAsNft] = useState(false)
+  const [customTitleCheckbox, setCustomTitleCheckbox] = useState(false)
+  const [customTitle, setCustomTitle] = useState("")
 
   const handleContentChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     setNoteContent(event.target.value)
@@ -123,7 +124,6 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
       const end = textarea.selectionEnd
       const textBeforeCursor = noteContent.substring(0, start)
       const textAfterCursor = noteContent.substring(end)
-
       // Check if cursor is in the middle of or adjacent to a word
       const isAdjacentToWord =
         (start > 0 && /\w/.test(noteContent[start - 1])) || /\w/.test(noteContent[end])
@@ -186,6 +186,9 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
     event.kind = 1
     if (repliedEvent && repliedEvent.kind !== 1) event.kind = 9373
     event.content = noteContent
+    if (customTitleCheckbox && customTitle.trim()) {
+      event.content = `Title: ${customTitle.trim()}\n\n${noteContent}`
+    }
     event.ndk = ndk()
     if (repliedEvent) {
       event.tags = [
@@ -208,7 +211,9 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
 
   return (
     <div
-      className={`rounded-lg overflow-y-auto max-h-screen md:w-[600px] ${isDraggingOver ? "bg-neutral" : ""}`}
+      className={`rounded-lg overflow-y-auto max-h-screen md:w-[600px] ${
+        isDraggingOver ? "bg-neutral" : ""
+      }`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -264,8 +269,48 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
             Publish
           </button>
         </div>
+
+        {/* New checkboxes section */}
+        <div className="mt-4 flex gap-4 items-center">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={publishAsNft}
+              onChange={() => setPublishAsNft(!publishAsNft)}
+            />
+            <span>Publish as NFT</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={customTitleCheckbox}
+              onChange={() => setCustomTitleCheckbox(!customTitleCheckbox)}
+            />
+            <span>Custom Title</span>
+          </label>
+        </div>
+
+        {publishAsNft && (
+          <p className="text-sm text-gray-500">
+            You have 10 credits left for NFT publishing.
+          </p>
+        )}
+
+        {customTitleCheckbox && (
+          <input
+            className="input input-bordered mt-2 w-full"
+            placeholder="Enter custom title"
+            value={customTitle}
+            onChange={(e) => setCustomTitle(e.target.value)}
+          />
+        )}
+
         <div className="mt-4 min-h-16 max-h-96 overflow-y-scroll">
-          <div className="text-sm uppercase text-gray-500 mb-2 font-bold">Preview</div>
+          <div className="text-sm uppercase text-gray-500 mb-5 font-bold">Preview</div>
+
+          {customTitleCheckbox && customTitle.trim() && (
+            <div className="text-sm mb-2 font-bold">{customTitle}</div>
+          )}
           <HyperText>{noteContent}</HyperText>
         </div>
       </div>

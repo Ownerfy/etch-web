@@ -7,10 +7,8 @@ instance.interceptors.request.use(
   async (config) => {
     const user = auth.currentUser
 
-    console.log("user", user)
     if (user) {
       const authToken = await user.getIdToken()
-      console.log("authToken", authToken)
       config.headers["Authorization"] = `Bearer ${authToken}`
     }
 

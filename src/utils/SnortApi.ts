@@ -136,20 +136,21 @@ export function trackEvent(
   e?: {destination?: {url: string}}
 ) {
   if (!import.meta.env.DEV && CONFIG.features.analytics) {
-    fetch("https://pa.v0l.io/api/event", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        d: CONFIG.hostname,
-        n: event,
-        r: document.referrer === window.location.href ? null : document.referrer,
-        p: props,
-        u:
-          e?.destination?.url ??
-          `${window.location.protocol}//${window.location.host}${window.location.pathname}`,
-      }),
-    })
+    // TODO: add google analytics
+    // fetch("https://pa.v0l.io/api/event", {
+    //   method: "POST",
+    //   headers: {
+    //     "content-type": "application/json",
+    //   },
+    //   body: JSON.stringify({
+    //     d: CONFIG.hostname,
+    //     n: event,
+    //     r: document.referrer === window.location.href ? null : document.referrer,
+    //     p: props,
+    //     u:
+    //       e?.destination?.url ??
+    //       `${window.location.protocol}//${window.location.host}${window.location.pathname}`,
+    //   }),
+    // })
   }
 }

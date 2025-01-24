@@ -1,4 +1,5 @@
 import {Outlet, ScrollRestoration, useLocation, useNavigate} from "react-router-dom"
+import ForgotPasswordDialog from "@/shared/components/user/ForgotPassword.tsx"
 import WelcomeDialog from "@/shared/components/user/WelcomeDialog.tsx"
 import NoteCreator from "@/shared/components/create/NoteCreator.tsx"
 import {useInviteLinkFromUrl} from "../hooks/useInviteLinkFromUrl"
@@ -32,6 +33,10 @@ const Layout = () => {
   )
   const [showWelcomeDialog, setShowWelcomeDialog] = useLocalState(
     "home/showWelcomeDialog",
+    false
+  )
+  const [showForgotPasswordDialog, setShowForgotPasswordDialog] = useLocalState(
+    "home/showForgotPasswordDialog",
     false
   )
   const [isSocialGraphLoaded, setIsSocialGraphLoaded] = useState(false)
@@ -109,6 +114,16 @@ const Layout = () => {
         {showWelcomeDialog && (
           <Modal onClose={() => setShowWelcomeDialog(false)}>
             <WelcomeDialog />
+          </Modal>
+        )}
+        {showForgotPasswordDialog && (
+          <Modal
+            onClose={() => {
+              setShowLoginDialog(true)
+              setShowForgotPasswordDialog(false)
+            }}
+          >
+            <ForgotPasswordDialog />
           </Modal>
         )}
         <Footer /> {/* Add Footer component here */}

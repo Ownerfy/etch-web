@@ -52,9 +52,8 @@ function ProfileDetails({
     return ""
   }, [pubKey, navigate])
 
+  // TODO: test validateNip05 on live
   useEffect(() => {
-    console.log("displayProfile", pubKey, displayProfile)
-    console.log("npub", npub)
     if (npub && displayProfile?.nip05) {
       ndk()
         ?.getUser({npub})

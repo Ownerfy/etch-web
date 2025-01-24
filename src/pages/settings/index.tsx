@@ -64,12 +64,12 @@ function Settings() {
         //   message: "Notifications",
         //   path: "/settings/notifications",
         // },
-        {
-          icon: "closedeye",
-          iconBg: "bg-red-500",
-          message: "Privacy",
-          path: "/settings/privacy",
-        },
+        // {
+        //   icon: "closedeye",
+        //   iconBg: "bg-red-500",
+        //   message: "Privacy",
+        //   path: "/settings/privacy",
+        // },
       ],
     },
     {

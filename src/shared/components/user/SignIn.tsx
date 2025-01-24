@@ -1,88 +1,83 @@
-import {hexToBytes, bytesToHex} from "@noble/hashes/utils"
+import {signIn} from "@/shared/services/BackendServices"
 import {NDKPrivateKeySigner} from "@nostr-dev-kit/ndk"
-import {ChangeEvent, useEffect, useState} from "react"
-import {getPublicKey, nip19} from "nostr-tools"
 import {useLocalState} from "irisdb-hooks"
-import classNames from "classnames"
+import React, {useState} from "react"
 import {localState} from "irisdb"
 import {ndk} from "irisdb-nostr"
-
-const NSEC_NPUB_REGEX = /(nsec1|npub1)[a-zA-Z0-9]{20,65}/gi
-const HEX_REGEX = /[0-9a-fA-F]{64}/gi
 
 interface SignInProps {
   onClose: () => void
 }
 
 export default function SignIn({onClose}: SignInProps) {
-  const [, setNip07Login] = useLocalState("user/nip07Login", false)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
   const [, setShowLoginDialog] = useLocalState("home/showLoginDialog", false)
-  const [inputPrivateKey, setInputPrivateKey] = useState("")
+  const [, setShowForgotPasswordDialog] = useLocalState(
+    "home/showForgotPasswordDialog",
+    false
+  )
 
-  useEffect(() => {
-    if (
-      inputPrivateKey &&
-      (inputPrivateKey.match(NSEC_NPUB_REGEX) || inputPrivateKey.match(HEX_REGEX))
-    ) {
-      if (inputPrivateKey && typeof inputPrivateKey === "string") {
-        const bytes =
-          inputPrivateKey.indexOf("nsec1") === 0
-            ? (nip19.decode(inputPrivateKey).data as Uint8Array)
-            : hexToBytes(inputPrivateKey)
-        const hex = bytesToHex(bytes)
-        const privateKeySigner = new NDKPrivateKeySigner(hex)
-        ndk().signer = privateKeySigner
-        const publicKey = getPublicKey(bytes)
-        localState.get("user/privateKey").put(hex)
-        localState.get("user/publicKey").put(publicKey)
-        localStorage.setItem("cashu.ndk.privateKeySignerPrivateKey", hex)
-        localStorage.setItem("cashu.ndk.pubkey", publicKey)
-        setShowLoginDialog(false)
-      }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+
+    if (!email || !password) {
+      setError("Please fill in all fields")
+      return
     }
-  }, [inputPrivateKey])
 
-  function extensionLogin() {
-    if (window.nostr) {
-      setNip07Login(true)
+    try {
+      const {privKey, nostrPubKey} = await signIn({email, password})
+      localState.get("user/privateKey").put(privKey)
+      localState.get("user/publicKey").put(nostrPubKey)
+      const privateKeySigner = new NDKPrivateKeySigner(privKey)
+      ndk().signer = privateKeySigner
       setShowLoginDialog(false)
-    } else {
-      window.open("https://nostrcheck.me/register/browser-extension.php", "_blank")
+      onClose()
+    } catch {
+      setError("Invalid email or password")
     }
   }
 
-  function onPrivateKeyChange(e: ChangeEvent<HTMLInputElement>) {
-    setInputPrivateKey(e.target.value)
-  }
-
-  function isElectronRenderer() {
-    return navigator.userAgent.toLowerCase().includes("electron")
+  const handleForgotPassword = () => {
+    setShowLoginDialog(false)
+    setShowForgotPasswordDialog(true)
   }
 
   return (
     <div className="flex flex-col gap-4">
       <form
         className="flex flex-col items-center gap-4 flex-wrap"
-        onSubmit={(e) => e.preventDefault()}
+        onSubmit={handleSubmit}
       >
         <h1 className="text-2xl font-bold">Sign in</h1>
-        {!isElectronRenderer() && (
-          <>
-            <button className="btn btn-primary" onClick={() => extensionLogin()}>
-              {window.nostr ? "Nostr Extension Login" : "Install Nostr Extension"}
-            </button>
-            or
-          </>
-        )}
         <input
-          autoComplete="nsec"
-          type="password"
-          className={classNames("input input-bordered", {
-            "input-error": inputPrivateKey && inputPrivateKey.length < 60,
-          })}
-          placeholder="Paste secret key"
-          onChange={(e) => onPrivateKeyChange(e)}
+          type="email"
+          placeholder="Email"
+          className="input input-bordered max-w-xs w-[300px]"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
         />
+        <input
+          type="password"
+          placeholder="Password"
+          className="input input-bordered max-w-xs w-[300px]"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        {error && <p className="text-error text-sm">{error}</p>}
+        <button type="submit" className="btn btn-primary">
+          Sign In
+        </button>
+        <button
+          type="button"
+          className="btn btn-link text-blue-500"
+          onClick={handleForgotPassword}
+        >
+          Forgot Password?
+        </button>
       </form>
       <div
         className="flex flex-col items-center justify-center gap-4 flex-wrap border-t pt-4 cursor-pointer"

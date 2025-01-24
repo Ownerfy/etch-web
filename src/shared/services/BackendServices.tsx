@@ -43,9 +43,14 @@ export {createUser}
 
 // Sign in a firebase user
 const signIn = async ({email, password}: {email: string; password: string}) => {
-  const result = await signInWithEmailAndPassword(auth, email, password)
-  console.log("sign in firebase user result: ", result)
-  return result
+  await signInWithEmailAndPassword(auth, email, password)
+
+  // Get user data from backend
+  const {
+    data: {privKey, nostrPubKey},
+  } = await axios.get(`${import.meta.env.VITE_FUNCTIONS_URL}api/getUser`)
+
+  return {privKey, nostrPubKey}
 }
 
 export {signIn}
