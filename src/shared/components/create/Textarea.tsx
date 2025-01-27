@@ -15,7 +15,6 @@ import {nip19} from "nostr-tools"
 interface TextareaProps {
   value: string
   onChange: (event: ChangeEvent<HTMLTextAreaElement>) => void
-  onUpload: (file: File) => void
   onPublish: () => void
   quotedEvent?: NDKEvent
   placeholder: string
@@ -25,7 +24,6 @@ interface TextareaProps {
 const Textarea = ({
   value,
   onChange,
-  onUpload,
   onPublish,
   placeholder,
   quotedEvent,
@@ -131,15 +129,14 @@ const Textarea = ({
 
   const handlePaste = (event: ClipboardEvent<HTMLTextAreaElement>) => {
     if (event.clipboardData) {
-      const items = Array.from(event.clipboardData.items)
-      const mediaItem = items.find((item) => /^(image|video)\//.test(item.type))
-
-      if (mediaItem) {
-        const blob = mediaItem.getAsFile()
-        if (blob) {
-          onUpload(blob)
-        }
-      }
+      // const items = Array.from(event.clipboardData.items)
+      // const mediaItem = items.find((item) => /^(image|video)\//.test(item.type))
+      // if (mediaItem) {
+      //   const blob = mediaItem.getAsFile()
+      //   if (blob) {
+      //     onUpload(blob)
+      //   }
+      // }
     }
   }
 

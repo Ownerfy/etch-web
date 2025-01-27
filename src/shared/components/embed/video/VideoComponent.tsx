@@ -62,7 +62,7 @@ function VideoComponent({match, event}: VideoComponentProps) {
       <video
         onClick={onClick}
         ref={videoRef}
-        className={classNames("rounded max-h-[70vh] w-auto", {"blur-xl": blur})}
+        className={classNames("max-h-[70vh] w-auto", {"blur-xl": blur})}
         src={match}
         controls
         muted
@@ -73,7 +73,7 @@ function VideoComponent({match, event}: VideoComponentProps) {
       {/* <video TODO: bring this back when proxy server is up
         onClick={onClick}
         ref={videoRef}
-        className={classNames("rounded max-h-[70vh] w-auto", {"blur-xl": blur})}
+        className={classNames("max-h-[70vh] w-auto", {"blur-xl": blur})}
         src={match}
         controls
         muted

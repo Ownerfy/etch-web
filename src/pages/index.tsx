@@ -9,7 +9,6 @@ import WalletPage from "./wallet/WalletPage"
 import {Page404} from "@/pages/Page404.tsx"
 import SettingsPage from "@/pages/settings"
 import MessagesPage from "@/pages/messages"
-import {AboutPage} from "@/pages/HelpPage"
 import SearchPage from "@/pages/search"
 import HomePage from "@/pages/home"
 import {TOS} from "@/pages/Tos"
@@ -24,10 +23,11 @@ export const router = createBrowserRouter(
       <Route path="/settings/*" element={<SettingsPage />} />
       <Route path="/explorer/:file?" element={<Explorer />} />
       <Route path="/search/:query?" element={<SearchPage />} />
-      <Route path="/about" element={<AboutPage />} />
       <Route path="/terms" element={<TOS />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/404" element={<Page404 />} />
+      <Route path="/u/:link/*" element={<NostrLinkHandler />} />
+      <Route path="/p/:link/*" element={<NostrLinkHandler />} />
       <Route path="/:link/*" element={<NostrLinkHandler />} />
     </Route>,
   ])

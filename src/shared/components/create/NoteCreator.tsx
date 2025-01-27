@@ -1,5 +1,5 @@
-import {ChangeEvent, DragEvent, useEffect, useState} from "react"
-import {uploadToFirebaseStorage} from "@/shared/upload"
+import {publishNote} from "@/shared/services/BackendServices.tsx"
+import {ChangeEvent, useEffect, useState} from "react"
 import {NDKEvent, NDKTag} from "@nostr-dev-kit/ndk"
 import {useLocalState} from "irisdb-hooks"
 import {drawText} from "canvas-txt"
@@ -25,7 +25,6 @@ interface NoteCreatorProps {
 }
 
 async function generateTextImage(text: string, leftAligned: boolean) {
-  console.log("running generateTextNft")
   const canvas = document.createElement("canvas")
   canvas.width = 600
   canvas.height = 600
@@ -37,6 +36,11 @@ async function generateTextImage(text: string, leftAligned: boolean) {
   ctx.fillRect(0, 0, canvas.width, canvas.height)
 
   ctx.fillStyle = "black"
+
+  if (text.length > 500) {
+    text = text.substring(0, 500) + " ..."
+  }
+
   const {height} = drawText(ctx, text, {
     x: 26,
     y: 40,
@@ -48,69 +52,7 @@ async function generateTextImage(text: string, leftAligned: boolean) {
     font: "Courier",
   })
 
-  console.log(`Total height = ${height}`)
   return canvas.toDataURL()
-}
-
-function addPTags(event: NDKEvent, repliedEvent?: NDKEvent, quotedEvent?: NDKEvent) {
-  const uniquePTags = new Set<string>()
-  const uniqueETags = new Set<string>()
-  const otherTags: NDKTag[] = []
-
-  if (event.pubkey) {
-    uniquePTags.add(event.pubkey)
-  }
-  // Process existing tags
-  event.tags.forEach((tag) => {
-    if (tag[0] === "p" && tag[1]?.trim()) {
-      uniquePTags.add(tag[1])
-    } else if (tag[0] === "e" && tag[1]?.trim()) {
-      uniqueETags.add(tag[1])
-    } else if (tag[0] !== "p" && tag[0] !== "e") {
-      otherTags.push(tag)
-    }
-  })
-  // Add p-tags from events and e-tag the events themselves
-  if (repliedEvent) {
-    if (repliedEvent.pubkey?.trim()) {
-      uniquePTags.add(repliedEvent.pubkey)
-    }
-    if (repliedEvent.id?.trim()) {
-      uniqueETags.add(repliedEvent.id)
-    }
-    // Add p-tags from replied event
-    repliedEvent.tags.forEach((tag) => {
-      if (tag[0] === "p" && tag[1]?.trim()) {
-        uniquePTags.add(tag[1])
-      }
-    })
-  }
-
-  if (quotedEvent) {
-    if (quotedEvent.pubkey?.trim()) {
-      uniquePTags.add(quotedEvent.pubkey)
-    }
-    if (quotedEvent.id?.trim()) {
-      uniqueETags.add(quotedEvent.id)
-    }
-    // Add p-tags from quoted event
-    quotedEvent.tags.forEach((tag) => {
-      if (tag[0] === "p" && tag[1]?.trim()) {
-        uniquePTags.add(tag[1])
-      }
-    })
-  }
-  // Filter out any empty values and reconstruct tags array
-  const validPTags = Array.from(uniquePTags).filter(Boolean)
-  const validETags = Array.from(uniqueETags).filter(Boolean)
-
-  event.tags = [
-    ...validPTags.map<NDKTag>((pubkey) => ["p", pubkey]),
-    ...validETags.map<NDKTag>((id) => ["e", id]),
-    ...otherTags,
-  ]
-
-  return event
 }
 
 function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps) {
@@ -123,12 +65,12 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
   )
 
   const [textarea, setTextarea] = useState<HTMLTextAreaElement | null>(null)
-  const [previewImageUrl, setPreviewImageUrl] = useState<string>("")
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string>("")
+  const [showNftHelp, setShowNftHelp] = useState(false)
 
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadError, setUploadError] = useState<string | null>(null)
-  const [isDraggingOver, setIsDraggingOver] = useState(false)
 
   // New state for checkboxes and custom title
   const [publishAsNft, setPublishAsNft] = useState(false)
@@ -137,20 +79,23 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
 
   const [isLeftAligned, setIsLeftAligned] = useState(false)
 
-  function refreshImagePreviewUrl(isNft: boolean) {
-    // If we see no "http" in noteContent, generate a text image.
-    if (!noteContent.match(/http/) && isNft) {
+  const [uploadType, setUploadType] = useState("video")
+  const [uploadedVideo, setUploadedVideo] = useState<string | "">("")
+  const [uploadedImages, setUploadedImages] = useState<Map<string, string>>(new Map())
+
+  function refreshImagePreviewUrl() {
+    if (!uploadedVideo && uploadedImages.size === 0 && publishAsNft) {
       generateTextImage(noteContent, isLeftAligned)
-        .then(setPreviewImageUrl)
+        .then(setGeneratedImageUrl)
         .catch(console.error)
     } else {
-      setPreviewImageUrl("")
+      setGeneratedImageUrl("")
     }
   }
 
   useEffect(() => {
-    refreshImagePreviewUrl(publishAsNft)
-  }, [noteContent, isLeftAligned])
+    refreshImagePreviewUrl()
+  }, [noteContent, isLeftAligned, publishAsNft, uploadedVideo, uploadedImages])
 
   const handleContentChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     setNoteContent(event.target.value)
@@ -165,106 +110,122 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
     }
   }, [quotedEvent])
 
-  const handleUpload = (url: string) => {
-    if (textarea) {
-      const start = textarea.selectionStart
-      const end = textarea.selectionEnd
-      const textBeforeCursor = noteContent.substring(0, start)
-      const textAfterCursor = noteContent.substring(end)
-      // Check if cursor is in the middle of or adjacent to a word
-      const isAdjacentToWord =
-        (start > 0 && /\w/.test(noteContent[start - 1])) || /\w/.test(noteContent[end])
+  const handleFileUpload = async (url: string, oldFileName?: string) => {
+    // search for the file extension between the last dot and ? or end of string
+    const extensionMatch = url.match(/\.(\w+)(?:\?|$)/)
+    const extension = extensionMatch && extensionMatch[1]
 
-      if (isAdjacentToWord) {
-        // If adjacent to a word, append the URL at the end
-        setNoteContent(noteContent + ` ${url}`)
-      } else {
-        // Otherwise, insert the URL at the cursor position
-        setNoteContent(textBeforeCursor + ` ${url} ` + textAfterCursor)
-        // Move cursor to the end of the inserted URL
-        setTimeout(() => {
-          textarea.selectionStart = textarea.selectionEnd = start + url.length + 2
-        }, 0)
-      }
+    //check if file extension matches any known image type
+    const imageTypes = ["jpg", "jpeg", "png", "gif", "webp", "bmp"]
+    // Known video types
+    const videoTypes = ["mp4", "webm", "mp3", "mov", "avi"]
+    // if file extension matches imageType then set type to image else if matches videoType then set type to video else error
+    let type = ""
+    if (extension && imageTypes.includes(extension)) {
+      type = "image"
+    } else if (extension && videoTypes.includes(extension)) {
+      type = "video"
+    } else {
+      setUploadError("Invalid file type")
+      return
     }
-  }
 
-  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
-    event.preventDefault()
-    setIsDraggingOver(true)
-  }
-
-  const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
-    event.preventDefault()
-    setIsDraggingOver(false)
-  }
-
-  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
-    event.preventDefault()
-    setIsDraggingOver(false)
-    const files = Array.from(event.dataTransfer.files)
-    files.forEach((file) => {
-      if (file.type.startsWith("image/") || file.type.startsWith("video/")) {
-        handleFileUpload(file)
-      }
-    })
-  }
-
-  const handleFileUpload = async (file: File) => {
-    setUploading(true)
-    setUploadProgress(0)
-    setUploadError(null)
-    try {
-      const url = await uploadToFirebaseStorage(file, (progress) => {
-        setUploadProgress(progress)
+    if (type === "image") {
+      setUploadedImages((prev) => {
+        if (prev.size >= 5) {
+          setUploadError("Cannot upload more than 5 images. Delete some to upload more.")
+          return prev
+        }
+        const newMap = new Map(prev)
+        newMap.set(oldFileName, url)
+        return newMap
       })
-      handleUpload(url)
-    } catch (error) {
-      console.error("File upload failed:", error)
-      setUploadError(error instanceof Error ? error.message : String(error))
-    } finally {
-      setUploading(false)
-      setUploadProgress(0)
     }
+
+    if (type === "video") {
+      if (uploadedVideo) {
+        setUploadError(
+          "Cannot upload more than one video. Delete the current video to upload another."
+        )
+        return
+      }
+      setUploadedVideo(url)
+    }
+
+    setUploading(false)
+    setUploadProgress(0)
   }
 
-  const publish = () => {
-    const event = new NDKEvent(ndk())
-    event.kind = 1
-    if (repliedEvent && repliedEvent.kind !== 1) event.kind = 9373
-    event.content = noteContent
-    if (customTitleCheckbox && customTitle.trim()) {
-      event.content = `Title: ${customTitle.trim()}\n\n${noteContent}`
-    }
-    event.ndk = ndk()
-    if (repliedEvent) {
-      event.tags = [
-        ["q", repliedEvent.id],
-        ["p", repliedEvent.pubkey],
-        ["e", repliedEvent.id, "", "reply", repliedEvent.pubkey],
-      ]
-    }
-    addPTags(event, repliedEvent, quotedEvent)
-    event.sign().then(() => {
-      eventsByIdCache.set(event.id, event)
+  const publish = async () => {
+    // const event = new NDKEvent(ndk())
+    // event.kind = 1
+    // if (repliedEvent && repliedEvent.kind !== 1) event.kind = 9373
+    // event.content = noteContent
+    // if (customTitleCheckbox && customTitle.trim()) {
+    //   event.content = `Title: ${customTitle.trim()}\n\n${noteContent}`
+    // }
+    // if (uploadType === "video" && uploadedVideo) {
+    //   event.content += `\n\n${uploadedVideo}`
+    // }
+    // if (uploadType === "image" && uploadedImages.size > 0) {
+    //   event.content += `\n\n${Array.from(uploadedImages.values()).join(", ")}`
+    // }
+    // event.ndk = ndk()
+    // if (repliedEvent) {
+    //   event.tags = [
+    //     ["q", repliedEvent.id],
+    //     ["p", repliedEvent.pubkey],
+    //     ["e", repliedEvent.id, "", "reply", repliedEvent.pubkey],
+    //   ]
+    // }
+
+    // addPTags(event, repliedEvent, quotedEvent)
+    // event.sign().then(() => {
+    //   eventsByIdCache.set(event.id, event)
+    //   setNoteContent("")
+    //   handleClose()
+    //   navigate(`/${nip19.noteEncode(event.id)}`)
+    // })
+    // event.publish().catch((error) => {
+    //   console.warn(`Note could not be published: ${error}`)
+    // })
+
+    // Send data to server for publishing and get back event ID
+    try {
+      const {eventId, event} = await publishNote({
+        title: customTitleCheckbox && customTitle.trim() ? customTitle.trim() : "",
+        content: noteContent,
+        uploadedVideo: uploadType === "video" ? uploadedVideo : "",
+        isNft: publishAsNft,
+        uploadedImages: uploadType === "" ? Array.from(uploadedImages.values()) : [],
+        repliedEvent: JSON.stringify(repliedEvent),
+        quotedEvent: JSON.stringify(quotedEvent),
+        generatedImageUrl,
+      })
+      // eventsByIdCache.set(eventId, event)
+
       setNoteContent("")
+      setUploadedVideo("")
+      setUploadedImages(new Map())
+      setGeneratedImageUrl("")
+      setCustomTitle("")
+      setPublishAsNft(false)
+      setCustomTitleCheckbox(false)
+      setIsLeftAligned(false)
+      setUploadType("image")
+      setUploadError(null)
+      setUploadProgress(0)
+
       handleClose()
-      navigate(`/${nip19.noteEncode(event.id)}`)
-    })
-    event.publish().catch((error) => {
-      console.warn(`Note could not be published: ${error}`)
-    })
+      navigate(`/${nip19.noteEncode(eventId)}`)
+    } catch (error: unknown) {
+      console.error("Failed to publish note", error.error)
+      setUploadError(error.message)
+    }
   }
 
   return (
-    <div
-      className={`rounded-lg overflow-y-auto max-h-screen md:w-[600px] ${
-        isDraggingOver ? "bg-neutral" : ""
-      }`}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-    >
+    <div className={`rounded-lg overflow-y-auto max-h-screen md:w-[600px]`}>
       {repliedEvent && (
         <div className="p-4 max-h-52 overflow-y-auto border-b border-base-content/20">
           <FeedItem
@@ -279,7 +240,6 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
         <Textarea
           value={noteContent}
           onChange={handleContentChange}
-          onUpload={handleFileUpload}
           onPublish={publish}
           placeholder="What's on your mind?"
           quotedEvent={quotedEvent}
@@ -301,9 +261,17 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
           {myPubKey && <Avatar showBadge={false} pubKey={myPubKey} />}
           <UploadButton
             className="rounded-full btn btn-primary"
-            onUpload={handleUpload}
+            onUpload={handleFileUpload}
             text="Upload file"
           />
+          <select
+            className="select select-bordered"
+            value={uploadType}
+            onChange={(e) => setUploadType(e.target.value)}
+          >
+            <option value="video">Video (1)</option>
+            <option value="image">Image (5)</option>
+          </select>
           <div className="flex-1"></div>
           <button className="btn btn-ghost rounded-full" onClick={handleClose}>
             Cancel
@@ -317,20 +285,80 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
           </button>
         </div>
 
+        <div className="mt-4">
+          {uploadType === "image" &&
+            Array.from(uploadedImages.entries()).map(([oldFileName, url], index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-2 mb-2 border rounded bg-base-200"
+              >
+                <span className="truncate">{oldFileName}</span>
+                <button
+                  type="button"
+                  className="text-error ml-2"
+                  onClick={() =>
+                    setUploadedImages((prev) => {
+                      const newMap = new Map(prev)
+                      newMap.delete(oldFileName)
+                      return newMap
+                    })
+                  }
+                >
+                  X
+                </button>
+              </div>
+            ))}
+
+          {uploadType === "video" && uploadedVideo && (
+            <div className="flex items-center justify-between p-2 mb-2 border rounded bg-base-200">
+              <span className="truncate">
+                {decodeURIComponent(
+                  uploadedVideo.split("/").pop()?.split("?")[0] ?? "Unknown"
+                )}
+              </span>
+              <button
+                type="button"
+                className="text-error ml-2"
+                onClick={() => setUploadedVideo("")}
+              >
+                X
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* New checkboxes section */}
         <div className="mt-4 flex gap-4 items-center">
-          <label className="flex items-center gap-2 cursor-pointer">
+          <p>*this server is alpha and will not publish on-chain now</p>
+          {/* <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
               checked={publishAsNft}
               onChange={() => {
                 setCustomTitleCheckbox(!publishAsNft)
                 setPublishAsNft(!publishAsNft)
-                refreshImagePreviewUrl(!publishAsNft)
+                refreshImagePreviewUrl()
               }}
             />
-            <span>Publish as NFT</span>
-          </label>
+            <span>
+              {" "}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-4 h-4 inline-block mb-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13.828 10.172a4 4 0 115.657 5.657l-3.172 3.172a4 4 0 01-5.657-5.657M10.172 13.828a4 4 0 00-5.657-5.657L1.343 11.343a4 4 0 005.657 5.657"
+                />
+              </svg>{" "}
+              Publish On-Chain
+            </span>
+          </label> */}
           {publishAsNft && (
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -349,18 +377,34 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
                 checked={isLeftAligned}
                 onChange={() => {
                   setIsLeftAligned(!isLeftAligned)
-                  refreshImagePreviewUrl(publishAsNft)
+                  refreshImagePreviewUrl()
                 }}
               />
               <span>Left Align Text</span>
             </label>
           )}
         </div>
-
         {publishAsNft && (
-          <p className="text-sm text-gray-500">
-            You have 10 credits left for NFT publishing.
-          </p>
+          <>
+            <p
+              className="text-sm text-gray-500  cursor-pointer"
+              onClick={() => setShowNftHelp(!showNftHelp)}
+            >
+              &#9432; {showNftHelp ? "Hide help" : "Show help"}
+            </p>
+            {showNftHelp && (
+              <p className="text-sm text-gray-500">
+                This will use 1 of your X credits. More credits are available in settings.
+                <br />
+                If there is more than one image only the first will be visible in most NFT
+                tools, however they will all be published and on-chain. An image will be
+                generated if one is not referenced in the post. If there are more letters
+                than can fit on in the auto-generated image the rest of the content will
+                still be published on-chain and visible in Etch Social and the Nostr
+                ecosystem.
+              </p>
+            )}
+          </>
         )}
 
         {customTitleCheckbox && (
@@ -380,15 +424,30 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
           )}
 
           {/* If we have a generated image URL, show it */}
-          {previewImageUrl && (
+          {generatedImageUrl && (
             <img
-              src={previewImageUrl}
+              src={generatedImageUrl}
               alt="Generated NFT"
               className="mx-auto mb-2 max-w-[400px] h-auto"
             />
           )}
 
-          {!previewImageUrl && <HyperText>{noteContent}</HyperText>}
+          {!generatedImageUrl && (
+            <>
+              <HyperText>{noteContent}</HyperText>
+              {(() => {
+                if (uploadType === "video" && uploadedVideo) {
+                  return <HyperText>{uploadedVideo}</HyperText>
+                }
+                if (uploadType === "image" && uploadedImages.size > 0) {
+                  return (
+                    <HyperText>{Array.from(uploadedImages.values()).join(" ")}</HyperText>
+                  )
+                }
+                return null
+              })()}
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -396,50 +455,3 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
 }
 
 export default NoteCreator
-
-// 1) Make generateTextImage return the generated Data URL.
-// 2) Track a previewImageUrl state. If no file upload (or no URL in noteContent), generate a text image.
-
-// async function generateTextImage(text: string) {
-//   const canvas = createCanvas(600, 600);
-//   const ctx = canvas.getContext('2d');
-//   ctx.fillStyle = 'blue';
-//   ctx.fillRect(0, 0, 600, 600);
-//   ctx.fillStyle = 'black';
-//   drawText(ctx, text, { x: 30, y: 30, width: 540, height: 540, fontSize: 24, font: 'Courier' });
-//   return canvas.toDataURL();
-// }
-
-// function NoteCreator({ handleClose, quotedEvent, repliedEvent }: NoteCreatorProps) {
-//   ...
-//   const [previewImageUrl, setPreviewImageUrl] = useState<string>("");
-
-//   useEffect(() => {
-//     // If we see no "http" in noteContent, generate a text image.
-//     if (!noteContent.match(/http/)) {
-//       generateTextImage(noteContent).then(setPreviewImageUrl).catch(console.error);
-//     } else {
-//       setPreviewImageUrl("");
-//     }
-//   }, [noteContent]);
-
-//   return (
-//     <div ...>
-//       ...
-//       <div className="mt-4 min-h-16 max-h-96 overflow-y-scroll">
-//         <div className="text-sm uppercase text-gray-500 mb-5 font-bold">Preview</div>
-
-//         {customTitleCheckbox && customTitle.trim() && (
-//           <div className="text-sm mb-2 font-bold">{customTitle}</div>
-//         )}
-
-//         {/* If we have a generated image URL, show it */}
-//         {previewImageUrl && (
-//           <img src={previewImageUrl} alt="Generated NFT" className="mb-2 max-w-full h-auto" />
-//         )}
-
-//         <HyperText>{noteContent}</HyperText>
-//       </div>
-//     </div>
-//   );
-// }

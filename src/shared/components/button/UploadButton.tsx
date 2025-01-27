@@ -3,7 +3,7 @@ import React, {useRef, useState} from "react"
 import {uploadToFirebaseStorage} from "@/shared/upload"
 
 type Props = {
-  onUpload: (url: string) => void
+  onUpload: (url: string, file?: string) => void
   onError?: (error: Error) => void
   text?: string
   className?: string
@@ -37,7 +37,7 @@ const UploadButton = ({
       const url = await uploadToFirebaseStorage(file, (progress) => {
         setProgress(progress)
       })
-      onUpload(url)
+      onUpload(url, file.name)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
       setErrorMessage(errorMessage)

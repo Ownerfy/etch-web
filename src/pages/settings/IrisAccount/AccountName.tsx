@@ -16,16 +16,16 @@ export default function AccountName({name = "", link = true}: AccountNameProps) 
         Short link:{" "}
         {link ? (
           <a
-            href={`https://etch.social/${name}`}
+            href={`https://etch.social/u/${name}`}
             onClick={(e) => {
               e.preventDefault()
               navigate(`/${name}`)
             }}
           >
-            etch.social/{name}
+            etch.social/u/{name}
           </a>
         ) : (
-          <>etch.social/{name}</>
+          <>etch.social/u/{name}</>
         )}
       </div>
       <div>

@@ -11,7 +11,7 @@ const FeedItemShare = ({event}: {event: NDKEvent}) => {
     if (navigator.share) {
       try {
         await navigator.share({
-          url: `https://etch.social/${nip19.noteEncode(event.id)}`,
+          url: `https://etch.social/p/${nip19.noteEncode(event.id)}`,
         })
       } catch (error) {
         console.error("Error sharing:", error)

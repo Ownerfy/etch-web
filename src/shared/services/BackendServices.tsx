@@ -68,3 +68,41 @@ const sendPasswordReset = async (email: string) => {
 }
 
 export {sendPasswordReset}
+
+// Publish note
+const publishNote = async ({
+  title,
+  content,
+  uploadedVideo,
+  isNft,
+  uploadedImages,
+  repliedEvent,
+  quotedEvent,
+  generatedImageUrl,
+}: {
+  title: string
+  content: string
+  uploadedVideo: string | null
+  isNft: boolean
+  uploadedImages: string[]
+  repliedEvent: string | null
+  quotedEvent: string | null
+  generatedImageUrl: string | null
+}) => {
+  const response = await axios.post(
+    `${import.meta.env.VITE_FUNCTIONS_URL}api/social/post`,
+    {
+      title,
+      content,
+      uploadedVideo,
+      isNft,
+      uploadedImages,
+      repliedEvent,
+      quotedEvent,
+      generatedImageUrl,
+    }
+  )
+  return response.data
+}
+
+export {publishNote}

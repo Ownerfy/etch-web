@@ -80,7 +80,7 @@ function HlsVideoComponent({match, event}: HlsVideoComponentProps) {
       <video
         onClick={onClick}
         ref={videoRef}
-        className={classNames("rounded max-h-[70vh] w-auto", {"blur-xl": blur})}
+        className={classNames("max-h-[70vh] w-auto", {"blur-xl": blur})}
         controls
         muted
         autoPlay

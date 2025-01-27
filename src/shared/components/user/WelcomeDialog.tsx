@@ -18,7 +18,7 @@ export default function WelcomeDialog() {
             from our platform alone—opening up a truly global conversation!
           </p>
 
-          <p className="mb-4">Here’s what you can expect as you get started:</p>
+          {/* <p className="mb-4">Here’s what you can expect as you get started:</p>
 
           <ul className="list-disc pl-6 space-y-2 mb-4">
             <li>
@@ -34,7 +34,7 @@ export default function WelcomeDialog() {
               or want to support our platform, you can buy more credits or subscribe in
               your settings panel.
             </li>
-          </ul>
+          </ul> */}
 
           <p className="mb-4">
             We’re looking forward to hearing your voice. Jump in, explore, and connect

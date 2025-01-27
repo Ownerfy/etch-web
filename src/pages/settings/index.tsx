@@ -8,8 +8,11 @@ import {Network} from "@/pages/settings/Network.tsx"
 import {RiArrowRightSLine} from "@remixicon/react"
 import Icon from "@/shared/components/Icons/Icon"
 import Account from "@/pages/settings/Account"
+import Credits from "@/pages/settings/Credits"
 // import WalletSettings from "./WalletSettings"
 import Backup from "@/pages/settings/Backup"
+import About from "@/pages/settings/About"
+import Help from "@/pages/settings/Help"
 import PrivacySettings from "./Privacy"
 import {Helmet} from "react-helmet"
 import classNames from "classnames"
@@ -43,6 +46,18 @@ function Settings() {
         },
       ],
     },
+
+    {
+      title: "Funds",
+      items: [
+        {
+          icon: "shopping-bag",
+          iconBg: "bg-green-500",
+          message: "Credits",
+          path: "/settings/credits",
+        },
+      ],
+    },
     {
       title: "Application",
       items: [
@@ -58,6 +73,7 @@ function Settings() {
           message: "Content",
           path: "/settings/content",
         },
+
         // {
         //   icon: "bell-outline",
         //   iconBg: "bg-green-500",
@@ -102,10 +118,17 @@ function Settings() {
           icon: "hard-drive",
           iconBg: "bg-blue-500",
           message: "About",
-          path: "/about",
+          path: "/settings/about",
+        },
+        {
+          icon: "info-outline",
+          iconBg: "bg-blue-500",
+          message: "Help",
+          path: "/settings/help",
         },
       ],
     },
+
     {
       title: "Log out",
       items: [
@@ -173,6 +196,9 @@ function Settings() {
             <Route path="content" element={<Content />} />
             {/* <Route path="wallet" element={<WalletSettings />} /> */}
             <Route path="backup" element={<Backup />} />
+            <Route path="about" element={<About />} />
+            <Route path="help" element={<Help />} />
+            <Route path="credits" element={<Credits />} />
             <Route path="appearance" element={<Appearance />} />
             <Route path="social-graph" element={<SocialGraphSettings />} />
             <Route path="notifications" element={<NotificationSettings />} />

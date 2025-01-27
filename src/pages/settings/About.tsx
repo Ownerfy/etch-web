@@ -1,4 +1,4 @@
-export const AboutPage = () => {
+function About() {
   return (
     <section className="flex justify-center gap-10 mx-4 my-4 lg:my-8 lg:mx-8">
       <div className="flex flex-1">
@@ -91,3 +91,5 @@ export const AboutPage = () => {
     </section>
   )
 }
+
+export default About
