@@ -66,7 +66,7 @@ export function UserRow({
           return `/${pubKey}`
         } else if (HEX_REGEX.test(pubKey)) {
           const k = nip19.npubEncode(pubKey)
-          return `/${k}`
+          return `/u/${k}`
         }
       } catch (error) {
         console.warn(error)

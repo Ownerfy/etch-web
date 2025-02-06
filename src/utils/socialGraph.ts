@@ -279,7 +279,7 @@ export const loadFromFile = (merge = false) => {
 }
 
 export const downloadLargeGraph = () => {
-  fetch("https://files.etch.social/large_social_graph.json")
+  fetch("https://files.iris.to/large_social_graph.json")
     .then((response) => response.json())
     .then((data) => {
       instance = new SocialGraph(instance.getRoot(), data)

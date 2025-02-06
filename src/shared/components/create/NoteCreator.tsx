@@ -1,16 +1,17 @@
-import {publishNote} from "@/shared/services/BackendServices.tsx"
-import {ChangeEvent, useEffect, useState} from "react"
-import {NDKEvent, NDKTag} from "@nostr-dev-kit/ndk"
-import {useLocalState} from "irisdb-hooks"
-import {drawText} from "canvas-txt"
-import {ndk} from "irisdb-nostr"
+// import {ndk} from "irisdb-nostr"
 
 import UploadButton from "@/shared/components/button/UploadButton.tsx"
 import FeedItem from "@/shared/components/event/FeedItem/FeedItem"
+import {publishNote} from "@/shared/services/BackendServices.tsx"
+import {fetchUserCredits} from "../../services/BackendServices"
 import {Avatar} from "@/shared/components/user/Avatar.tsx"
 import HyperText from "@/shared/components/HyperText.tsx"
+import {ChangeEvent, useEffect, useState} from "react"
+import {NDKEvent} from "@nostr-dev-kit/ndk"
+import {useLocalState} from "irisdb-hooks"
+import {drawText} from "canvas-txt"
 
-import {eventsByIdCache} from "@/utils/memcache"
+// import {eventsByIdCache} from "@/utils/memcache"
 import {useNavigate} from "react-router-dom"
 import {nip19} from "nostr-tools"
 import Textarea from "./Textarea"
@@ -41,7 +42,7 @@ async function generateTextImage(text: string, leftAligned: boolean) {
     text = text.substring(0, 500) + " ..."
   }
 
-  const {height} = drawText(ctx, text, {
+  drawText(ctx, text, {
     x: 26,
     y: 40,
     width: 545,
@@ -58,13 +59,14 @@ async function generateTextImage(text: string, leftAligned: boolean) {
 function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps) {
   const [myPubKey] = useLocalState("user/publicKey", localStorage.getItem("pubkey"))
   const navigate = useNavigate()
+  const [userCredits, setUserCredits] = useState(0)
 
   const [noteContent, setNoteContent] = useLocalState(
     repliedEvent ? "notes/replyDraft" : "notes/draft",
     ""
   )
 
-  const [textarea, setTextarea] = useState<HTMLTextAreaElement | null>(null)
+  const [, setTextarea] = useState<HTMLTextAreaElement | null>(null)
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string>("")
   const [showNftHelp, setShowNftHelp] = useState(false)
 
@@ -82,6 +84,31 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
   const [uploadType, setUploadType] = useState("video")
   const [uploadedVideo, setUploadedVideo] = useState<string | "">("")
   const [uploadedImages, setUploadedImages] = useState<Map<string, string>>(new Map())
+
+  // Add this state near other state declarations
+  const [isPublishing, setIsPublishing] = useState(false)
+
+  // Add credit fetching
+  const getUserCredits = async () => {
+    try {
+      const response = await fetchUserCredits()
+      const {nftCredits = 0} = response || {}
+      setUserCredits(nftCredits)
+    } catch (error) {
+      console.error("Failed to fetch user credits:", error)
+      setUserCredits(0)
+    }
+  }
+
+  // Fetch credits on mount and when window gains focus
+  useEffect(() => {
+    getUserCredits()
+
+    const handleFocus = () => getUserCredits()
+    window.addEventListener("focus", handleFocus)
+
+    return () => window.removeEventListener("focus", handleFocus)
+  }, [])
 
   function refreshImagePreviewUrl() {
     if (!uploadedVideo && uploadedImages.size === 0 && publishAsNft) {
@@ -137,7 +164,7 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
           return prev
         }
         const newMap = new Map(prev)
-        newMap.set(oldFileName, url)
+        oldFileName && newMap.set(oldFileName, url)
         return newMap
       })
     }
@@ -157,53 +184,29 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
   }
 
   const publish = async () => {
-    // const event = new NDKEvent(ndk())
-    // event.kind = 1
-    // if (repliedEvent && repliedEvent.kind !== 1) event.kind = 9373
-    // event.content = noteContent
-    // if (customTitleCheckbox && customTitle.trim()) {
-    //   event.content = `Title: ${customTitle.trim()}\n\n${noteContent}`
-    // }
-    // if (uploadType === "video" && uploadedVideo) {
-    //   event.content += `\n\n${uploadedVideo}`
-    // }
-    // if (uploadType === "image" && uploadedImages.size > 0) {
-    //   event.content += `\n\n${Array.from(uploadedImages.values()).join(", ")}`
-    // }
-    // event.ndk = ndk()
-    // if (repliedEvent) {
-    //   event.tags = [
-    //     ["q", repliedEvent.id],
-    //     ["p", repliedEvent.pubkey],
-    //     ["e", repliedEvent.id, "", "reply", repliedEvent.pubkey],
-    //   ]
-    // }
-
-    // addPTags(event, repliedEvent, quotedEvent)
-    // event.sign().then(() => {
-    //   eventsByIdCache.set(event.id, event)
-    //   setNoteContent("")
-    //   handleClose()
-    //   navigate(`/${nip19.noteEncode(event.id)}`)
-    // })
-    // event.publish().catch((error) => {
-    //   console.warn(`Note could not be published: ${error}`)
-    // })
+    setIsPublishing(true)
 
     // Send data to server for publishing and get back event ID
     try {
+      console.log(
+        "uploaded images are",
+        Array.from(uploadedImages.values()),
+        "uploadType is",
+        uploadType
+      )
       const {eventId, event} = await publishNote({
         title: customTitleCheckbox && customTitle.trim() ? customTitle.trim() : "",
         content: noteContent,
         uploadedVideo: uploadType === "video" ? uploadedVideo : "",
         isNft: publishAsNft,
-        uploadedImages: uploadType === "" ? Array.from(uploadedImages.values()) : [],
+        uploadedImages: uploadType === "image" ? Array.from(uploadedImages.values()) : [],
         repliedEvent: JSON.stringify(repliedEvent),
         quotedEvent: JSON.stringify(quotedEvent),
         generatedImageUrl,
       })
       // eventsByIdCache.set(eventId, event)
 
+      // Is this really necessary?
       setNoteContent("")
       setUploadedVideo("")
       setUploadedImages(new Map())
@@ -212,20 +215,26 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
       setPublishAsNft(false)
       setCustomTitleCheckbox(false)
       setIsLeftAligned(false)
-      setUploadType("image")
+      setUploadType("video")
       setUploadError(null)
       setUploadProgress(0)
 
       handleClose()
       navigate(`/${nip19.noteEncode(eventId)}`)
     } catch (error: unknown) {
-      console.error("Failed to publish note", error.error)
-      setUploadError(error.message)
+      if (error instanceof Error) {
+        console.error("Failed to publish note", error.message)
+        setUploadError(error.message)
+      } else {
+        setUploadError("Failed to publish note")
+      }
+    } finally {
+      setIsPublishing(false)
     }
   }
 
   return (
-    <div className={`rounded-lg overflow-y-auto max-h-screen md:w-[600px]`}>
+    <div className={`overflow-y-auto max-h-screen md:w-[600px]`}>
       {repliedEvent && (
         <div className="p-4 max-h-52 overflow-y-auto border-b border-base-content/20">
           <FeedItem
@@ -278,16 +287,16 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
           </button>
           <button
             className="btn btn-primary rounded-full"
-            disabled={!noteContent}
+            disabled={!noteContent || isPublishing}
             onClick={publish}
           >
-            Publish
+            {isPublishing ? "Publishing..." : "Publish"}
           </button>
         </div>
 
         <div className="mt-4">
           {uploadType === "image" &&
-            Array.from(uploadedImages.entries()).map(([oldFileName, url], index) => (
+            Array.from(uploadedImages.entries()).map(([oldFileName], index) => (
               <div
                 key={index}
                 className="flex items-center justify-between p-2 mb-2 border rounded bg-base-200"
@@ -329,8 +338,7 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
 
         {/* New checkboxes section */}
         <div className="mt-4 flex gap-4 items-center">
-          <p>*this server is alpha and will not publish on-chain now</p>
-          {/* <label className="flex items-center gap-2 cursor-pointer">
+          <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
               checked={publishAsNft}
@@ -358,7 +366,7 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
               </svg>{" "}
               Publish On-Chain
             </span>
-          </label> */}
+          </label>
           {publishAsNft && (
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -394,7 +402,10 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
             </p>
             {showNftHelp && (
               <p className="text-sm text-gray-500">
-                This will use 1 of your X credits. More credits are available in settings.
+                Non-blockchain posts are free. On-chain image posts use 1 credit. On-chain
+                video posts use 3 credits.
+                <br />
+                You have {userCredits} credits. More credits are available in settings.
                 <br />
                 If there is more than one image only the first will be visible in most NFT
                 tools, however they will all be published and on-chain. An image will be

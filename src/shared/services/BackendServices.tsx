@@ -106,3 +106,40 @@ const publishNote = async ({
 }
 
 export {publishNote}
+
+const createStripeCheckoutSessionForBuyCredits = async (data: {
+  creditPlanId: string
+  cancelUrl: string
+  successUrl: string
+}) => {
+  const stripeCheckoutData = await axios.post(
+    `/api/createStripeCheckoutSessionForCredits`,
+    data
+  )
+  return stripeCheckoutData.data
+}
+
+export {createStripeCheckoutSessionForBuyCredits}
+
+const getCreditPlans = async () => {
+  try {
+    const response = await axios.get(`api/credit-plans`)
+    return response.data
+  } catch (error) {
+    console.error(`Fetch Credit Plans Failed: `, error)
+    return []
+  }
+}
+
+export {getCreditPlans}
+
+const fetchUserCredits = async () => {
+  try {
+    const response = await axios.get(`api/user-credits`)
+    return response.data
+  } catch (error) {
+    console.error("Get Credit Failed: ", error)
+  }
+}
+
+export {fetchUserCredits}

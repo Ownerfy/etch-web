@@ -9,10 +9,12 @@ export default function NostrLinkHandler() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const cleanLink = link?.replace(/^web\+nostr:\/\//, "")
+  const cleanLink = link?.includes("web+nostr://")
+    ? link.replace(/^web\+nostr:\/\//, "")
+    : link
 
   useEffect(() => {
-    if (link !== cleanLink) {
+    if (link?.startsWith("web+nostr://")) {
       navigate(`/${cleanLink}`, {replace: true})
     }
   }, [link, cleanLink, navigate])

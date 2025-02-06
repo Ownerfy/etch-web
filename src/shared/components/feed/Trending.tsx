@@ -1,8 +1,8 @@
 import InfiniteScroll from "@/shared/components/ui/InfiniteScroll.tsx"
 import {NDKEventFromRawEvent, RawEvent} from "@/utils/nostr.ts"
+import {useCallback, useState, useMemo, useEffect} from "react"
 import useCachedFetch from "@/shared/hooks/useCachedFetch.ts"
 import EventBorderless from "../event/EventBorderless"
-import {useCallback, useState, useMemo} from "react"
 import FeedItem from "../event/FeedItem/FeedItem"
 import socialGraph from "@/utils/socialGraph"
 import {NDKEvent} from "@nostr-dev-kit/ndk"
@@ -48,6 +48,15 @@ type TrendingData = {
 
 type TrendingItem = RawEvent | {hashtag: string; posts: number}
 
+type NostrWineResponse = {
+  event_id: string
+  reactions: number
+  replies: number
+  reposts: number
+  zap_amount: number
+  zap_count: number
+}
+
 export default function Trending({
   small = true,
   contentType = "notes",
@@ -72,7 +81,8 @@ export default function Trending({
     }
   }, [api, lang, contentType])
   const storageKey = `nostr-band-${trendingUrl}`
-  const [displayCount, setDisplayCount] = useState(10)
+  const [displayCount, setDisplayCount] = useState(25)
+  const [wineEvents, setWineEvents] = useState<RawEvent[]>([])
 
   const {
     data: trendingData,
@@ -103,10 +113,51 @@ export default function Trending({
     )
   )
 
+  useEffect(() => {
+    const fetchWineEvents = async () => {
+      try {
+        // 1. Fetch trending event IDs from nostr.wine
+        // from here https://docs.nostr.wine/api/trending
+        const res = await fetch(
+          `https://api.nostr.wine/trending?order=replies&hours=24&limit=${displayCount}`
+        )
+        if (!res.ok) throw new Error("Failed to fetch from nostr.wine")
+        const data: NostrWineResponse[] = await res.json()
+        console.log("Fetched trending events from wine : ", data)
+
+        // 2. Create NDK instance with relay
+        const ndkInstance = ndk()
+        //await ndkInstance.connect()
+
+        // 3. Fetch full events using their IDs
+        const events = await Promise.all(
+          data.map(async (item) => {
+            const event = await ndkInstance.fetchEvent(item.event_id)
+            return event?.rawEvent()
+          })
+        )
+
+        // 4. Filter valid events and set state
+        const validEvents = events.filter((ev): ev is RawEvent => !!ev)
+        setWineEvents(validEvents)
+      } catch (err) {
+        console.error("Error fetching wine events:", err)
+      }
+    }
+
+    fetchWineEvents()
+  }, [displayCount])
+
   const sortedData = useMemo(() => {
-    if (!trendingData) return []
-    return randomSort ? [...trendingData].sort(() => Math.random() - 0.5) : trendingData
-  }, [trendingData, randomSort])
+    if (!wineEvents.length) return []
+    // if trendingData then use that
+    if (trendingData && trendingData.length > 0) {
+      return randomSort ? [...trendingData].sort(() => Math.random() - 0.5) : trendingData
+    }
+    // TODO: might want to switch this back to trendingData or figure out a more robust solution later
+    // Right now we are just getting the trending data from nostr.wine in no order and no hashtags from that
+    return randomSort ? [...wineEvents].sort(() => Math.random() - 0.5) : wineEvents
+  }, [wineEvents, trendingData, randomSort])
 
   const loadMore = useCallback(() => {
     setDisplayCount((prevCount) => Math.min(prevCount + 10, sortedData.length))

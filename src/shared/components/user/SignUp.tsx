@@ -129,9 +129,11 @@ export default function SignUp({onClose}: SignUpProps) {
     setSubmitError("")
 
     let valid = true
-
     if (username.length < 4) {
       setNameError("Username must be at least 4 characters long.")
+      valid = false
+    } else if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      setNameError("Username can only contain letters, numbers and underscores.")
       valid = false
     } else if (!isUsernameAvailable) {
       setNameError("Username is already taken.")
@@ -152,8 +154,8 @@ export default function SignUp({onClose}: SignUpProps) {
         ndk()
 
         const {privKey, nostrPubKey} = await createUser({
-          username,
-          email,
+          username: username,
+          email: email.toLowerCase().trim(),
           password,
           captchaToken,
         })

@@ -148,6 +148,10 @@ export function getEventReplyingTo(event: NDKEvent) {
   return undefined
 }
 
+export function hasEtchTag(event: NDKEvent) {
+  return event.tags?.some((tag) => tag[0] === "l" && tag[1] === "app-etch")
+}
+
 export async function fetchEvent(filter: NDKFilter): Promise<NDKEvent> {
   return new Promise((resolve) => {
     const sub = ndk().subscribe(filter)

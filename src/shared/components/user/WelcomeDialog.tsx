@@ -18,7 +18,7 @@ export default function WelcomeDialog() {
             from our platform alone—opening up a truly global conversation!
           </p>
 
-          {/* <p className="mb-4">Here’s what you can expect as you get started:</p>
+          <p className="mb-4">Here’s what you can expect as you get started:</p>
 
           <ul className="list-disc pl-6 space-y-2 mb-4">
             <li>
@@ -26,15 +26,15 @@ export default function WelcomeDialog() {
               or creative content without any cost.
             </li>
             <li>
-              <strong>10 Free Blockchain Posts</strong>: Get started with 10 complimentary
-              blockchain posts to try out our unique on-chain experience.
+              <strong>25 Free Blockchain Credits</strong>: Get started with 25
+              complimentary blockchain posts to try out the unique on-chain experience.
             </li>
             <li>
               <strong>More Posting Options</strong>: If you need additional on-chain posts
               or want to support our platform, you can buy more credits or subscribe in
               your settings panel.
             </li>
-          </ul> */}
+          </ul>
 
           <p className="mb-4">
             We’re looking forward to hearing your voice. Jump in, explore, and connect

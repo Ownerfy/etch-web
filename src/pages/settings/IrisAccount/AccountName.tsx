@@ -19,7 +19,7 @@ export default function AccountName({name = "", link = true}: AccountNameProps) 
             href={`https://etch.social/u/${name}`}
             onClick={(e) => {
               e.preventDefault()
-              navigate(`/${name}`)
+              navigate(`/u/${name}`)
             }}
           >
             etch.social/u/{name}

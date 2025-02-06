@@ -3,7 +3,6 @@ import socialGraph, {
   loadFromFile,
   saveToFile,
   loadAndMerge,
-  downloadLargeGraph,
 } from "@/utils/socialGraph"
 import {useState, useEffect} from "react"
 

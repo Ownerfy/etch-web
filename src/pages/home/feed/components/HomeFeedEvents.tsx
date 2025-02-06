@@ -1,14 +1,21 @@
 import {useCallback, useMemo, useEffect, useState} from "react"
 import {NDKEvent} from "@nostr-dev-kit/ndk"
 
-import {getEventReplyingTo, defaultFeedFilter, isGem, isIssue, isPR} from "@/utils/nostr"
+import {
+  getEventReplyingTo,
+  defaultFeedFilter,
+  isGem,
+  isIssue,
+  isPR,
+  hasEtchTag,
+} from "@/utils/nostr"
 import PublicKeyQRCodeButton from "@/shared/components/user/PublicKeyQRCodeButton"
 import MiddleHeader from "@/shared/components/header/MiddleHeader"
 import {fnByFilter, widgetFilterKinds} from "@/utils/filtering"
 import Trending from "@/shared/components/feed/Trending.tsx"
 import useHistoryState from "@/shared/hooks/useHistoryState"
 import {seenEventIds, feedCache} from "@/utils/memcache"
-import NotificationPrompt from "./NotificationPrompt"
+// import NotificationPrompt from "./NotificationPrompt"
 import Feed from "@/shared/components/feed/Feed.tsx"
 import {hasMedia} from "@/shared/components/embed"
 import useFollows from "@/shared/hooks/useFollows"
@@ -17,14 +24,21 @@ import {useLocalState} from "irisdb-hooks"
 import {localState} from "irisdb"
 
 const UNSEEN_CACHE_KEY = "unseenFeed"
+// const ETCH_CACHE_KEY = "etchFeed"
 
 const tabs = [
   {
-    name: "Unseen",
+    name: "Global",
     path: "unseen",
     cacheKey: UNSEEN_CACHE_KEY,
     showRepliedTo: false,
     fetchFilterFn: (e: NDKEvent) => !getEventReplyingTo(e) && !seenEventIds.has(e.id),
+  },
+  {
+    name: "Etch",
+    path: "etch",
+    showRepliedTo: false,
+    fetchFilterFn: (e: NDKEvent) => hasEtchTag(e),
   },
   {
     name: "Latest",

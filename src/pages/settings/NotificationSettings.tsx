@@ -31,7 +31,7 @@ const StatusIndicator = ({
 const NotificationSettings = () => {
   const [serviceWorkerReady, setServiceWorkerReady] = useState(false)
   const hasNotificationsApi = "Notification" in window
-  const [notificationsAllowed, setNotificationsAllowed] = useState(
+  const [notificationsAllowed] = useState(
     hasNotificationsApi && Notification.permission === "granted"
   )
   const [subscribedToPush, setSubscribedToPush] = useState(false)

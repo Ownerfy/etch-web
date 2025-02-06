@@ -9,6 +9,7 @@ import Header from "@/shared/components/header/Header.tsx"
 import {socialGraphLoaded} from "@/utils/socialGraph"
 import Modal from "@/shared/components/ui/Modal.tsx"
 import Footer from "@/shared/components/Footer.tsx"
+import {auth} from "@/shared/services/firebase.tsx"
 import {UserProvider} from "@/context/UserContext"
 import ErrorBoundary from "./ui/ErrorBoundary"
 import {trackEvent} from "@/utils/SnortApi"
@@ -42,6 +43,15 @@ const Layout = () => {
   const [isSocialGraphLoaded, setIsSocialGraphLoaded] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
+
+  // if user is not logged in show login dialog
+  useEffect(() => {
+    auth.onAuthStateChanged((user) => {
+      if (!user) {
+        setShowLoginDialog(true)
+      }
+    })
+  }, [])
 
   useInviteLinkFromUrl()
 

@@ -136,6 +136,7 @@ export function trackEvent(
   e?: {destination?: {url: string}}
 ) {
   if (!import.meta.env.DEV && CONFIG.features.analytics) {
+    console.log("i", event.length, typeof props, typeof e)
     // TODO: add google analytics
     // fetch("https://pa.v0l.io/api/event", {
     //   method: "POST",

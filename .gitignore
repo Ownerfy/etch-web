@@ -62,6 +62,7 @@ firebase.json
 # env
 .env
 functions/.env
+.env.*
 **/.env
 .env.local
 .env.development.local
