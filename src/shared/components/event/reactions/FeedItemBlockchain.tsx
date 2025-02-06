@@ -7,7 +7,6 @@ const FeedItemBlockchain = ({event}: {event: NDKEvent}) => {
 
   // Find blockchain tag in format ["blockchain", "contract", "tokenId"]
   const blockchainTag = event.tags.find((tag) => tag[0] === "blockchain")
-  console.log("LOOK HERE!", event.tags)
   if (!blockchainTag) return null
 
   const [, blockchain, contract, tokenId] = blockchainTag
