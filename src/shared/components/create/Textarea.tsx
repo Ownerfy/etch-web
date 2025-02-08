@@ -220,7 +220,7 @@ const Textarea = ({
     <div className="flex flex-col relative">
       <textarea
         ref={textareaRef}
-        className="textarea text-base border-none focus:outline-none p-0 rounded-none min-h-32 max-h-96 bg-transparent"
+        className="textarea min-h-[3rem] resize-y text-base border-none focus:outline-none p-0 rounded-none bg-black"
         value={value}
         placeholder={placeholder}
         onChange={handleInputChange}

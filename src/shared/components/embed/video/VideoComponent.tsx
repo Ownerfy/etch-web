@@ -58,11 +58,11 @@ function VideoComponent({match, event}: VideoComponentProps) {
   }
 
   return (
-    <div className="relative w-full object-contain my-2">
+    <div className="relative w-full object-contain my-2 flex justify-center">
       <video
         onClick={onClick}
         ref={videoRef}
-        className={classNames("max-h-[70vh] w-auto", {"blur-xl": blur})}
+        className={classNames("max-h-auto w-[80%]", {"blur-xl": blur})}
         src={match}
         controls
         muted

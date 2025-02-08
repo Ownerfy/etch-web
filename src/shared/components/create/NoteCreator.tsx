@@ -7,6 +7,7 @@ import {fetchUserCredits} from "../../services/BackendServices"
 import {Avatar} from "@/shared/components/user/Avatar.tsx"
 import HyperText from "@/shared/components/HyperText.tsx"
 import {ChangeEvent, useEffect, useState} from "react"
+import {auth} from "@/shared/services/firebase"
 import {NDKEvent} from "@nostr-dev-kit/ndk"
 import {useLocalState} from "irisdb-hooks"
 import {drawText} from "canvas-txt"
@@ -184,6 +185,12 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
   }
 
   const publish = async () => {
+    if (!auth.currentUser?.emailVerified) {
+      alert("Please verify your email to continue")
+      console.log("current user is", auth.currentUser)
+
+      return
+    }
     setIsPublishing(true)
 
     // Send data to server for publishing and get back event ID
@@ -194,7 +201,7 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
         "uploadType is",
         uploadType
       )
-      const {eventId, event} = await publishNote({
+      const {eventId} = await publishNote({
         title: customTitleCheckbox && customTitle.trim() ? customTitle.trim() : "",
         content: noteContent,
         uploadedVideo: uploadType === "video" ? uploadedVideo : "",
@@ -204,6 +211,7 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
         quotedEvent: JSON.stringify(quotedEvent),
         generatedImageUrl,
       })
+      // Event does come back from above but needs to be translated back to NDKEvent
       // eventsByIdCache.set(eventId, event)
 
       // Is this really necessary?
@@ -235,6 +243,11 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
 
   return (
     <div className={`overflow-y-auto max-h-screen md:w-[600px]`}>
+      <div className="flex flex-row gap-2">
+        <button className="btn btn-ghost rounded-full ml-auto" onClick={handleClose}>
+          X
+        </button>
+      </div>
       {repliedEvent && (
         <div className="p-4 max-h-52 overflow-y-auto border-b border-base-content/20">
           <FeedItem
@@ -245,12 +258,13 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
           />
         </div>
       )}
+
       <div className="p-4 md:p-8 flex flex-col gap-4">
         <Textarea
           value={noteContent}
           onChange={handleContentChange}
           onPublish={publish}
-          placeholder="What's on your mind?"
+          placeholder="Optional text"
           quotedEvent={quotedEvent}
           onRef={setTextarea}
         />
@@ -267,7 +281,11 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
         )}
         {uploadError && <p className="text-sm text-error mt-2">{uploadError}</p>}
         <div className="flex flex-row gap-2">
-          {myPubKey && <Avatar showBadge={false} pubKey={myPubKey} />}
+          {myPubKey && (
+            <div className="hidden md:block">
+              <Avatar showBadge={false} pubKey={myPubKey} />
+            </div>
+          )}
           <UploadButton
             className="rounded-full btn btn-primary"
             onUpload={handleFileUpload}
@@ -282,9 +300,7 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
             <option value="image">Image (5)</option>
           </select>
           <div className="flex-1"></div>
-          <button className="btn btn-ghost rounded-full" onClick={handleClose}>
-            Cancel
-          </button>
+
           <button
             className="btn btn-primary rounded-full"
             disabled={!noteContent || isPublishing}
@@ -294,17 +310,17 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
           </button>
         </div>
 
-        <div className="mt-4">
+        <div className="mt-1">
           {uploadType === "image" &&
             Array.from(uploadedImages.entries()).map(([oldFileName], index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-2 mb-2 border rounded bg-base-200"
+                className="flex items-center justify-between p-2 mb-2 border-none rounded bg-base-200"
               >
-                <span className="truncate">{oldFileName}</span>
+                <span className="truncate">Image {index + 1}</span>
                 <button
                   type="button"
-                  className="text-error ml-2"
+                  className="ml-2"
                   onClick={() =>
                     setUploadedImages((prev) => {
                       const newMap = new Map(prev)
@@ -319,17 +335,9 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
             ))}
 
           {uploadType === "video" && uploadedVideo && (
-            <div className="flex items-center justify-between p-2 mb-2 border rounded bg-base-200">
-              <span className="truncate">
-                {decodeURIComponent(
-                  uploadedVideo.split("/").pop()?.split("?")[0] ?? "Unknown"
-                )}
-              </span>
-              <button
-                type="button"
-                className="text-error ml-2"
-                onClick={() => setUploadedVideo("")}
-              >
+            <div className="flex items-center justify-between p-2 mb-2 border-none rounded bg-base-200">
+              <span className="truncate">Video</span>
+              <button type="button" className="ml-2" onClick={() => setUploadedVideo("")}>
                 X
               </button>
             </div>
@@ -337,8 +345,8 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
         </div>
 
         {/* New checkboxes section */}
-        <div className="mt-4 flex gap-4 items-center">
-          <label className="flex items-center gap-2 cursor-pointer">
+        <div className="mt-0 flex flex-col sm:flex-row gap-4 items-start md:items-center">
+          <label className="flex items-center gap-1 cursor-pointer">
             <input
               type="checkbox"
               checked={publishAsNft}
@@ -439,7 +447,7 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
             <img
               src={generatedImageUrl}
               alt="Generated NFT"
-              className="mx-auto mb-2 max-w-[400px] h-auto"
+              className="mx-auto mb-2 w-full max-w-[400px] h-auto"
             />
           )}
 
