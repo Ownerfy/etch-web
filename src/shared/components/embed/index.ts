@@ -110,6 +110,14 @@ export const hasMedia = (e: NDKEvent) => {
   return false
 }
 
+export const hasVideo = (e: NDKEvent) => {
+  return (
+    e.content.match(Video.regex) ||
+    e.content.match(HlsVideo.regex) ||
+    e.content.match(TikTok.regex)
+  )
+}
+
 export const smallEmbeds = [NostrNpub, Hashtag, SmallImage, SmallThumbnail, Url]
 
 export default Embed

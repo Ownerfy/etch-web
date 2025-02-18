@@ -14,7 +14,7 @@ export default function ThreadPage({id}: {id: string}) {
   const [relevantPeople, setRelevantPeople] = useState(new Map<string, boolean>())
   const [hideEventsByUnknownUsers] = useLocalState(
     "settings/hideEventsByUnknownUsers",
-    true,
+    false,
     Boolean
   )
 

@@ -15,6 +15,7 @@ import {
 } from "@/utils/notifications"
 import NotificationsFeedItem from "@/pages/notifications/NotificationsFeedItem"
 import InfiniteScroll from "@/shared/components/ui/InfiniteScroll"
+import NDKCacheAdapterDexie from "@nostr-dev-kit/ndk-cache-dexie"
 import useHistoryState from "@/shared/hooks/useHistoryState"
 import {NDKEvent, NDKSubscription} from "@nostr-dev-kit/ndk"
 import runningOstrich from "@/assets/running-ostrich.gif"
@@ -44,6 +45,24 @@ localState.get("user/publicKey").on((myPubKey) => {
     kinds: kinds,
     ["#p"]: [myPubKey],
     limit: 100,
+  }
+
+  try {
+    const DEFAULT_RELAYS = [
+      "wss://relay.etch.social",
+      "wss://relay.damus.io",
+      "wss://relay.nostr.band",
+      "wss://relay.snort.social",
+      "wss://strfry.iris.to",
+    ]
+
+    // If the user is logged in this is the first place NDK is initialized
+    ndk({
+      explicitRelayUrls: DEFAULT_RELAYS,
+      cacheAdapter: new NDKCacheAdapterDexie({dbName: "irisdb-nostr"}) as any,
+    })
+  } catch (error) {
+    ndk()
   }
 
   sub = ndk().subscribe(filters)

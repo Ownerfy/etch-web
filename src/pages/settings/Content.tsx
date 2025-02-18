@@ -1,10 +1,10 @@
 import {useLocalState} from "irisdb-hooks"
 
 function Content() {
-  const [blurNSFW, setBlurNSFW] = useLocalState<boolean>("settings/blurNSFW", true)
+  const [blurNSFW, setBlurNSFW] = useLocalState<boolean>("settings/blurNSFW", false)
   const [hideEventsByUnknownUsers, setHideEventsByUnknownUsers] = useLocalState<boolean>(
     "settings/hideEventsByUnknownUsers",
-    true
+    false
   )
   const [youtubePrivacyMode, setYoutubePrivacyMode] = useLocalState(
     "settings/youtubePrivacyMode",

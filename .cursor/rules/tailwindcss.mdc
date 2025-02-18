@@ -1,0 +1,6 @@
+---
+description: When writing html elements and styling them
+globs: 
+---
+
+Always style using tailwind css when styling html elements

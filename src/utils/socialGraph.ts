@@ -237,7 +237,7 @@ localState.get("settings/hideEventsByUnknownUsers").on((v) => {
 export function shouldHideEvent(ev: NDKEvent) {
   if (!hideEventsByUnknownUsers) return false
   const distance = instance.getFollowDistance(ev.pubkey)
-  return typeof distance !== "number" || distance > 5
+  return typeof distance !== "number" || distance > 10
 }
 
 export const saveToFile = () => {

@@ -26,7 +26,7 @@ export default function WelcomeDialog() {
               or creative content without any cost.
             </li>
             <li>
-              <strong>25 Free Blockchain Credits</strong>: Get started with 25
+              <strong>100 Free Blockchain Credits</strong>: Get started with 100
               complimentary blockchain posts to try out the unique on-chain experience.
             </li>
             <li>

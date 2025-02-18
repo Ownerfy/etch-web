@@ -13,7 +13,7 @@ const FeedItemBlockchain = ({event}: {event: NDKEvent}) => {
 
   const links = [
     {
-      name: "View on Etherscan",
+      name: "View on BaseScan",
       url: `https://basescan.org/token/${contract}?a=${tokenId}`,
       icon: "etherscan",
     },

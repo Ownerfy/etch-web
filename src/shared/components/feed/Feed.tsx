@@ -81,9 +81,9 @@ function Feed({
 
   const [hideEventsByUnknownUsers] = useLocalState(
     "settings/hideEventsByUnknownUsers",
-    true
+    false
   )
-  const [showEventsByUnknownUsers, setShowEventsByUnknownUsers] = useState(false)
+  const [showEventsByUnknownUsers, setShowEventsByUnknownUsers] = useState(true)
 
   const [feedFilter] = useLocalState("user/feedFilter", [])
 
@@ -124,8 +124,6 @@ function Feed({
 
     const sub = ndk().subscribe(localFilter)
 
-    console.log("localFilter changed, resub", localFilter)
-
     const debouncedInitialLoadDone = debounce(
       () => {
         initialLoadDone.current = true
@@ -159,7 +157,7 @@ function Feed({
           setNewEvents((prev) => new Map([...prev, [event.id, event]]))
           setNewEventsFrom((prev) => new Set([...prev, event.pubkey]))
         } else {
-          // update feed right away
+          // update feed right away for my own events
           eventsRef.current.set(event.id, event)
           if (!initialLoadDone.current) {
             debouncedInitialLoadDone()

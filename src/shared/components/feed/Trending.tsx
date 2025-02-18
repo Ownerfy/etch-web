@@ -60,7 +60,7 @@ type NostrWineResponse = {
 export default function Trending({
   small = true,
   contentType = "notes",
-  randomSort = true,
+  randomSort = false,
 }: {
   small?: boolean
   contentType?: "notes" | "videos" | "images" | "hashtags"
@@ -119,7 +119,7 @@ export default function Trending({
         // 1. Fetch trending event IDs from nostr.wine
         // from here https://docs.nostr.wine/api/trending
         const res = await fetch(
-          `https://api.nostr.wine/trending?order=replies&hours=24&limit=${displayCount}`
+          `https://api.nostr.wine/trending?order=reactions&hours=24&limit=${displayCount}`
         )
         if (!res.ok) throw new Error("Failed to fetch from nostr.wine")
         const data: NostrWineResponse[] = await res.json()
@@ -149,7 +149,7 @@ export default function Trending({
   }, [displayCount])
 
   const sortedData = useMemo(() => {
-    if (!wineEvents.length) return []
+    // if (!wineEvents.length) return []
     // if trendingData then use that
     if (trendingData && trendingData.length > 0) {
       return randomSort ? [...trendingData].sort(() => Math.random() - 0.5) : trendingData

@@ -134,14 +134,18 @@ export function getEventReplyingTo(event: NDKEvent) {
   if (event.kind !== 1) {
     return undefined
   }
+  // If there is a single non-mention "reply" then return the event id, the second position in the tags array
   const replyTags = event.tags?.filter((tag) => tag[0] === "e" && tag[3] !== "mention")
   if (replyTags.length === 1) {
     return replyTags[0][1]
   }
+  // If one of the reply tags is a "reply" type specifically then return the id (ignore mentions)
   const replyTag = event.tags?.find((tag) => tag[0] === "e" && tag[3] === "reply")
   if (replyTag) {
     return replyTag[1]
   }
+
+  // If there are multiple reply tags then return the second one
   if (replyTags.length > 1) {
     return replyTags[1][1]
   }

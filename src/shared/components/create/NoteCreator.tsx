@@ -76,7 +76,7 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
   const [uploadError, setUploadError] = useState<string | null>(null)
 
   // New state for checkboxes and custom title
-  const [publishAsNft, setPublishAsNft] = useState(false)
+  const [publishAsNft, setPublishAsNft] = useState(true)
   const [customTitleCheckbox, setCustomTitleCheckbox] = useState(false)
   const [customTitle, setCustomTitle] = useState("")
 
@@ -188,10 +188,14 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
     if (!auth.currentUser?.emailVerified) {
       alert("Please verify your email to continue")
       console.log("current user is", auth.currentUser)
-
       return
     }
     setIsPublishing(true)
+
+    // Add check for video type with no video
+    if (uploadType === "video" && !uploadedVideo) {
+      setUploadType("image")
+    }
 
     // Send data to server for publishing and get back event ID
     try {

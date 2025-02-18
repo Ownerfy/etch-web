@@ -1,6 +1,6 @@
 import UnseenNotificationsBadge from "@/shared/components/header/UnseenNotificationsBadge.tsx"
+import {useRef, ReactNode, MouseEventHandler, useMemo, useState, useEffect} from "react"
 import PublishButton from "@/shared/components/ui/PublishButton.tsx"
-import {useRef, ReactNode, MouseEventHandler, useMemo} from "react"
 import {UserRow} from "@/shared/components/user/UserRow.tsx"
 import Icon from "@/shared/components/Icons/Icon"
 import {npubEncode} from "nostr-tools/nip19"
@@ -10,6 +10,10 @@ import classNames from "classnames"
 import NavLink from "./NavLink"
 
 import PublicKeyQRCodeButton from "./user/PublicKeyQRCodeButton"
+
+interface IOSNavigator extends Navigator {
+  standalone?: boolean
+}
 
 interface NavItemProps {
   to: string
@@ -93,43 +97,44 @@ const NotificationNavItem = ({
 )
 
 const navItemsConfig = (myPubKey: string) => ({
-  home: {to: "/", icon: "home", label: "Home"},
+  home: {to: "/", icon: "home", label: "Home", display: "both"},
   wallet: {
     to: "/wallet",
     activeIcon: "wallet",
     inactiveIcon: "wallet",
     label: "Wallet",
-    requireLogin: true,
+    display: "loggedIn",
   },
   messages: {
     to: "/messages",
     icon: "mail",
     label: "Messages",
-    requireLogin: true,
+    display: "loggedIn",
   },
   notifications: {
     to: "/notifications",
     icon: "notifications",
     label: "Notifications",
-    requireLogin: true,
+    display: "loggedIn",
   },
   organizations: {
     to: "/organizations",
     activeIcon: "user-v2",
     inactiveIcon: "user-v2",
     label: "Organizations",
-    requireLogin: true,
+    display: "loggedIn",
   },
   repositories: {
     to: `/${npubEncode(myPubKey)}/code`,
     activeIcon: "hard-drive",
     inactiveIcon: "hard-drive",
     label: "Repositories",
-    requireLogin: true,
+    display: "loggedIn",
   },
-  settings: {to: "/settings", icon: "settings", label: "Settings", requireLogin: true},
-  about: {to: "/about", icon: "info", label: "About"},
-  search: {to: "/search", icon: "search", label: "Search"},
+  install: {to: "/install", icon: "download", label: "Install", display: "both"},
+  settings: {to: "/settings", icon: "settings", label: "Settings", display: "loggedIn"},
+  about: {to: "/about", icon: "info", label: "About", display: "both"},
+  search: {to: "/search", icon: "search", label: "Search", display: "both"},
 })
 
 const NavSideBar = () => {
@@ -137,13 +142,57 @@ const NavSideBar = () => {
   const [myPubKey] = useLocalState("user/publicKey", "")
   const [isSidebarOpen, setIsSidebarOpen] = useLocalState("isSidebarOpen", false)
   const [, setShowLoginDialog] = useLocalState("home/showLoginDialog", false)
+  const [isAppInstalled, setIsAppInstalled] = useState(false)
+
+  useEffect(() => {
+    // Check if app is installed
+    const checkInstallation = () => {
+      const isStandalone = window.matchMedia("(display-mode: standalone)").matches
+      // iOS detection with proper type
+      const isIOSInstalled =
+        (window.navigator as IOSNavigator).standalone ||
+        window.location.href.includes("homescreen=1")
+
+      setIsAppInstalled(isStandalone || isIOSInstalled)
+    }
+
+    checkInstallation()
+
+    // Listen for changes in display mode
+    const mediaQuery = window.matchMedia("(display-mode: standalone)")
+    mediaQuery.addListener(checkInstallation)
+
+    return () => mediaQuery.removeListener(checkInstallation)
+  }, [])
 
   const navItems = useMemo(() => {
     const configItems = navItemsConfig(myPubKey)
     return (CONFIG.navItems as Array<keyof typeof configItems>)
       .map((key) => configItems[key])
-      .filter((item) => !("requireLogin" in item) || (item.requireLogin && myPubKey))
-  }, [myPubKey])
+      .filter((item) => {
+        let shouldDisplay
+
+        if (item.label === "Install") {
+          // TODO: install will never be just loggedIn or loggedOut so clean it up
+          return (
+            !isAppInstalled &&
+            (item.display === "both" ||
+              (item.display === "loggedIn" && !!myPubKey) ||
+              (item.display === "loggedOut" && !myPubKey))
+          )
+        }
+
+        if (item.display === "both") {
+          shouldDisplay = true
+        } else if (item.display === "loggedIn") {
+          shouldDisplay = !!myPubKey
+        } else {
+          shouldDisplay = !myPubKey
+        }
+
+        return shouldDisplay
+      })
+  }, [myPubKey, isAppInstalled])
 
   const logoUrl = CONFIG.navLogo
 

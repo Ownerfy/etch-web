@@ -10,64 +10,89 @@ import {
   hasEtchTag,
 } from "@/utils/nostr"
 import PublicKeyQRCodeButton from "@/shared/components/user/PublicKeyQRCodeButton"
+
 import MiddleHeader from "@/shared/components/header/MiddleHeader"
 import {fnByFilter, widgetFilterKinds} from "@/utils/filtering"
-import Trending from "@/shared/components/feed/Trending.tsx"
 import useHistoryState from "@/shared/hooks/useHistoryState"
+import Trending from "@/shared/components/feed/Trending"
 import {seenEventIds, feedCache} from "@/utils/memcache"
 // import NotificationPrompt from "./NotificationPrompt"
 import Feed from "@/shared/components/feed/Feed.tsx"
-import {hasMedia} from "@/shared/components/embed"
+import {hasVideo} from "@/shared/components/embed"
 import useFollows from "@/shared/hooks/useFollows"
-import socialGraph from "@/utils/socialGraph"
+// import socialGraph from "@/utils/socialGraph"
 import {useLocalState} from "irisdb-hooks"
 import {localState} from "irisdb"
-
 const UNSEEN_CACHE_KEY = "unseenFeed"
 // const ETCH_CACHE_KEY = "etchFeed"
 
 const tabs = [
   {
     name: "Global",
-    path: "unseen",
-    cacheKey: UNSEEN_CACHE_KEY,
-    showRepliedTo: false,
-    fetchFilterFn: (e: NDKEvent) => !getEventReplyingTo(e) && !seenEventIds.has(e.id),
-  },
-  {
-    name: "Etch",
-    path: "etch",
-    showRepliedTo: false,
-    fetchFilterFn: (e: NDKEvent) => hasEtchTag(e),
-  },
-  {
-    name: "Latest",
-    path: "latest",
-    showRepliedTo: false,
-    displayFilterFn: (e: NDKEvent) =>
-      !getEventReplyingTo(e) && socialGraph().getFollowDistance(e.pubkey) <= 1,
-  },
-  {
-    name: "Replies",
-    path: "replies",
-    displayFilterFn: (e: NDKEvent) => socialGraph().getFollowDistance(e.pubkey) <= 1,
-  },
-  {
-    name: "Media",
-    path: "media",
-    showRepliedTo: false,
-    displayFilterFn: (e: NDKEvent) => hasMedia(e),
-  },
-  {
-    name: "Adventure",
     path: "adventure",
     showRepliedTo: false,
     filter: {
       kinds: [1],
       limit: 100,
     },
-    fetchFilterFn: (e: NDKEvent) =>
-      !getEventReplyingTo(e) && socialGraph().getFollowDistance(e.pubkey) <= 5,
+    cacheKey: "globalFeed",
+    fetchFilterFn: (e: NDKEvent) => !getEventReplyingTo(e), // && socialGraph().getFollowDistance(e.pubkey) <= 20,
+  },
+  {
+    name: "Trending",
+    path: "trending",
+    showRepliedTo: false,
+  },
+  {
+    name: "Etch",
+    path: "etch",
+    filter: {
+      kinds: [1],
+      limit: 100,
+      ["#l"]: ["app-etch"],
+    },
+    cacheKey: "etchFeed",
+    showRepliedTo: true,
+    fetchFilterFn: (e: NDKEvent) => hasEtchTag(e),
+  },
+  // {
+  //   name: "Latest",
+  //   path: "latest",
+  //   showRepliedTo: false,
+  //   displayFilterFn: (e: NDKEvent) =>
+  //     !getEventReplyingTo(e) && socialGraph().getFollowDistance(e.pubkey) <= 1,
+  // },
+  {
+    name: "Video",
+    path: "video",
+    showRepliedTo: true,
+    filter: {
+      kinds: [1],
+      limit: 100,
+    },
+    cacheKey: "videoFeed",
+    fetchFilterFn: (e: NDKEvent) => {
+      const isVideo = hasVideo(e)
+      const isNotReply = !getEventReplyingTo(e)
+      return Boolean(isVideo) && isNotReply // Force boolean conversion
+    },
+  },
+  {
+    name: "Unseen",
+    path: "unseen",
+    cacheKey: UNSEEN_CACHE_KEY,
+    showRepliedTo: false,
+    filter: {
+      kinds: [1],
+      limit: 100,
+    },
+    fetchFilterFn: (e: NDKEvent) => !getEventReplyingTo(e) && !seenEventIds.has(e.id),
+  },
+  {
+    name: "Following",
+    path: "replies",
+    cacheKey: "repliesFeed",
+    displayFilterFn: (e: NDKEvent) => !!getEventReplyingTo(e), //socialGraph().getFollowDistance(e.pubkey) <= 1,
   },
 ]
 
@@ -91,7 +116,7 @@ function HomeFeedEvents() {
   const follows = useFollows(myPubKey, true) // to update on follows change
   useLocalState("user/publicKey", "") // update on login
   const [refreshSignal] = useLocalState("refreshRouteSignal", 0, Number) // update on login
-  const [activeTab, setActiveTab] = useHistoryState("unseen", "activeHomeTab")
+  const [activeTab, setActiveTab] = useHistoryState("adventure", "activeHomeTab")
   const [widgetFilter] = useLocalState("user/feedFilter", defaultFeedFilter)
   const [forceUpdate, setForceUpdate] = useState(0)
 
@@ -115,9 +140,9 @@ function HomeFeedEvents() {
           }
         }
       }
-      setForceUpdate((prev) => prev + 1) // Force update Feed component
+      setForceUpdate((prev) => prev + 1)
     }
-  }, [activeTabItem, openedAt, refreshSignal])
+  }, [activeTab, activeTabItem, openedAt, refreshSignal])
 
   const filters = useMemo(() => {
     if (!CONFIG.rightColumnFilters && activeTabItem.filter) {
@@ -161,7 +186,7 @@ function HomeFeedEvents() {
   return (
     <>
       <MiddleHeader title={feedName} />
-      {follows.length > 1 && myPubKey && !CONFIG.rightColumnFilters && (
+      {!CONFIG.rightColumnFilters && (
         <div className="px-4 pb-4 flex flex-row gap-2 overflow-x-auto max-w-[100vw] scrollbar-hide">
           {tabs.map((t) => (
             <button
@@ -174,18 +199,21 @@ function HomeFeedEvents() {
           ))}
         </div>
       )}
-      {/* <NotificationPrompt TODO: Re-enable push notifications later/> */}
-      <Feed
-        key={activeTab === "unseen" ? "unseen" : "other"}
-        filters={filters}
-        displayFilterFn={displayFilterFn}
-        fetchFilterFn={activeTabItem.fetchFilterFn}
-        cacheKey={activeTabItem.cacheKey}
-        showRepliedTo={CONFIG.rightColumnFilters || activeTabItem.showRepliedTo}
-        emptyPlaceholder={<EmptyPlaceholder follows={follows} myPubKey={myPubKey} />}
-        forceUpdate={forceUpdate} // Pass forceUpdate to Feed component
-      />
-      {follows.length <= 1 && <Trending small={false} contentType="images" />}
+
+      {activeTab === "trending" ? (
+        <Trending small={false} contentType="notes" />
+      ) : (
+        <Feed
+          key={activeTab}
+          filters={filters}
+          displayFilterFn={displayFilterFn}
+          fetchFilterFn={activeTabItem.fetchFilterFn}
+          cacheKey={activeTabItem.cacheKey}
+          showRepliedTo={CONFIG.rightColumnFilters || activeTabItem.showRepliedTo}
+          emptyPlaceholder={<EmptyPlaceholder follows={follows} myPubKey={myPubKey} />}
+          forceUpdate={forceUpdate}
+        />
+      )}
     </>
   )
 }

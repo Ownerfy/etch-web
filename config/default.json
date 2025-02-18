@@ -7,7 +7,7 @@
   "navLogo": "/img/icon128.png",
   "defaultTheme": "etch",
   "defaultNotesTheme": "etch",
-  "navItems": ["home", "search", "messages", "notifications", "settings"],
+  "navItems": ["home", "search", "messages", "notifications", "install", "settings"],
   "rightColumnFilters": false,
   "publicDir": "public/etch",
   "aboutText": "Decentralizing social media.",
