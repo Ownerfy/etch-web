@@ -112,7 +112,7 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
   }, [])
 
   function refreshImagePreviewUrl() {
-    if (!uploadedVideo && uploadedImages.size === 0 && publishAsNft) {
+    if (publishAsNft && !uploadedVideo && uploadedImages.size === 0) {
       generateTextImage(noteContent, isLeftAligned)
         .then(setGeneratedImageUrl)
         .catch(console.error)
@@ -186,8 +186,9 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
 
   const publish = async () => {
     if (!auth.currentUser?.emailVerified) {
-      alert("Please verify your email to continue")
-      console.log("current user is", auth.currentUser)
+      alert(
+        "Please verify your email to continue. Resend email from settings -> account."
+      )
       return
     }
     setIsPublishing(true)
@@ -199,20 +200,32 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
 
     // Send data to server for publishing and get back event ID
     try {
-      console.log(
-        "uploaded images are",
-        Array.from(uploadedImages.values()),
-        "uploadType is",
-        uploadType
-      )
+      let _repliedEvent = {}
+      let _quotedEvent = {}
+      if (repliedEvent) {
+        _repliedEvent = {
+          id: repliedEvent.id,
+          pubkey: repliedEvent.pubkey,
+          tags: repliedEvent.tags,
+        }
+      }
+      if (quotedEvent) {
+        _quotedEvent = {
+          id: quotedEvent.id,
+          pubkey: quotedEvent.pubkey,
+          tags: quotedEvent.tags,
+        }
+      }
       const {eventId} = await publishNote({
         title: customTitleCheckbox && customTitle.trim() ? customTitle.trim() : "",
         content: noteContent,
         uploadedVideo: uploadType === "video" ? uploadedVideo : "",
         isNft: publishAsNft,
         uploadedImages: uploadType === "image" ? Array.from(uploadedImages.values()) : [],
-        repliedEvent: JSON.stringify(repliedEvent),
-        quotedEvent: JSON.stringify(quotedEvent),
+        repliedEvent:
+          Object.keys(_repliedEvent).length > 0 ? JSON.stringify(_repliedEvent) : "",
+        quotedEvent:
+          Object.keys(_quotedEvent).length > 0 ? JSON.stringify(_quotedEvent) : "",
         generatedImageUrl,
       })
       // Event does come back from above but needs to be translated back to NDKEvent
@@ -357,7 +370,6 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
               onChange={() => {
                 setCustomTitleCheckbox(!publishAsNft)
                 setPublishAsNft(!publishAsNft)
-                refreshImagePreviewUrl()
               }}
             />
             <span>

@@ -3,9 +3,16 @@ import {NDKEvent, NDKPrivateKeySigner} from "@nostr-dev-kit/ndk"
 import {createUser} from "@/shared/services/BackendServices"
 import ReCAPTCHA from "react-google-recaptcha"
 import {useLocalState} from "irisdb-hooks"
+import {nip19} from "nostr-tools"
 import {localState} from "irisdb"
 import {ndk} from "irisdb-nostr"
 import axios from "axios"
+
+function toHexString(byteArray: Uint8Array) {
+  return Array.from(byteArray, function (byte) {
+    return ("0" + (byte & 0xff).toString(16)).slice(-2)
+  }).join("")
+}
 
 interface SignUpProps {
   onClose: () => void
@@ -28,6 +35,10 @@ export default function SignUp({onClose}: SignUpProps) {
   const [, setShowWelcomeDialog] = useLocalState("home/showWelcomeDialog", false)
   const inputRef = useRef<HTMLInputElement>(null)
   const [isUsernameAvailable, setIsUsernameAvailable] = useState(true)
+  const [hasNostrKey, setHasNostrKey] = useState(false)
+  const [nostrKey, setNostrKey] = useState("")
+  const [translatedNostrKey, setTranslatedNostrKey] = useState("")
+  const [nostrKeyError, setNostrKeyError] = useState("")
 
   useEffect(() => {
     if (inputRef.current) {
@@ -123,6 +134,41 @@ export default function SignUp({onClose}: SignUpProps) {
     setIsAgeConfirmed(e.target.checked)
   }
 
+  const validateAndConvertNostrKey = (key: string): string | null => {
+    if (/^[0-9a-fA-F]{64}$/.test(key)) {
+      return key.toLowerCase()
+    }
+    if (key.startsWith("nsec")) {
+      try {
+        const {data} = nip19.decode(key)
+        const hexKey = toHexString(data as Uint8Array)
+        return hexKey.toLowerCase()
+      } catch (error) {
+        console.warn("Key conversion error: ", error)
+        return null
+      }
+    }
+
+    return null
+  }
+
+  const handleNostrKeyChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+
+    if (value) {
+      const validKey = validateAndConvertNostrKey(value)
+      if (!validKey) {
+        setNostrKeyError("Invalid private key format. Please use hex or nsec format.")
+      } else {
+        setNostrKey(value)
+        setTranslatedNostrKey(validKey)
+        setNostrKeyError("")
+      }
+    } else {
+      setNostrKeyError("")
+    }
+  }
+
   async function onNewUserLogin(e: FormEvent) {
     e.preventDefault()
     setIsLoading(true)
@@ -149,6 +195,19 @@ export default function SignUp({onClose}: SignUpProps) {
       valid = false
     }
 
+    if (hasNostrKey) {
+      if (!nostrKey) {
+        setNostrKeyError("Private key is required when checkbox is checked")
+        valid = false
+      } else {
+        const validKey = validateAndConvertNostrKey(nostrKey)
+        if (!validKey) {
+          setNostrKeyError("Invalid private key format")
+          valid = false
+        }
+      }
+    }
+
     if (valid && username && email && password) {
       try {
         ndk()
@@ -158,6 +217,7 @@ export default function SignUp({onClose}: SignUpProps) {
           email: email.toLowerCase().trim(),
           password,
           captchaToken,
+          nostrKey: hasNostrKey ? translatedNostrKey : null,
         })
 
         localState.get("user/privateKey").put(privKey)
@@ -264,6 +324,27 @@ export default function SignUp({onClose}: SignUpProps) {
           />
           <label className="text-sm">I confirm that I am 18 years of age or older</label>
         </div>
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={hasNostrKey}
+            onChange={(e) => setHasNostrKey(e.target.checked)}
+            className="checkbox"
+          />
+          <label className="text-sm">I already have a Nostr private key</label>
+        </div>
+        {hasNostrKey && (
+          <>
+            <input
+              className="input input-bordered w-[300px]"
+              type="text"
+              placeholder="Enter your Nostr private key"
+              value={nostrKey}
+              onChange={handleNostrKeyChange}
+            />
+            {nostrKeyError && <p className="text-red-500">{nostrKeyError}</p>}
+          </>
+        )}
         <button
           className="btn btn-primary"
           type="submit"

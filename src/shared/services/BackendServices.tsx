@@ -15,11 +15,13 @@ const createUser = async ({
   username,
   password,
   captchaToken,
+  nostrKey,
 }: {
   email: string
   username: string
   password: string
   captchaToken: string | null
+  nostrKey: string | null
 }) => {
   const result = await createUserWithEmailAndPassword(auth, email, password)
 
@@ -31,7 +33,7 @@ const createUser = async ({
   }
 
   const {uid} = user
-  const payload = {username, email, uid, captchaToken}
+  const payload = {username, email, uid, captchaToken, nostrKey}
   const response = await axios.post(
     `${import.meta.env.VITE_FUNCTIONS_URL}api/newUser`,
     payload

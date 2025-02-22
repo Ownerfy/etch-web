@@ -1,13 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any  */
-import {Component, FormEvent} from "react"
-
-import ReservedAccount from "./ReservedAccount"
+import {sendEmailVerification} from "firebase/auth"
+import {auth} from "@/shared/services/firebase"
 import {profileCache} from "@/utils/memcache"
-import {NDKEvent} from "@nostr-dev-kit/ndk"
-import ActiveAccount from "./ActiveAccount"
 import AccountName from "./AccountName"
 import {localState} from "irisdb"
-import {ndk} from "irisdb-nostr"
+import {Component} from "react"
 
 declare global {
   interface Window {
@@ -26,270 +23,91 @@ class IrisAccount extends Component {
     error: null as any,
     showChallenge: false,
     invalidUsernameMessage: null as any,
+    privateKey: null as string | null,
+    showPrivateKey: false,
   }
 
-  render() {
-    let view: any
+  private hideKeyTimeout: NodeJS.Timeout | null = null
 
-    if (this.state.etchSocialActive) {
-      const username = this.state.profile?.nip05.split("@")[0]
-      view = <AccountName name={username} />
-    } else if (this.state.existing && this.state.existing.confirmed) {
-      view = (
-        <ActiveAccount
-          name={this.state.existing.name}
-          setAsPrimary={() => this.setState({etchSocialActive: true})}
-        />
-      )
-    } else if (this.state.existing) {
-      view = (
-        <ReservedAccount
-          name={this.state.existing.name}
-          enableReserved={() => this.enableReserved()}
-          declineReserved={() => this.declineReserved()}
-        />
-      )
-    } else if (this.state.error) {
-      view = <div className="error">Error: {this.state.error}</div>
-    } else if (this.state.showChallenge) {
-      window.cf_turnstile_callback = (token: any) => this.register(token)
-      view = (
-        <>
-          <div
-            className="cf-turnstile"
-            data-sitekey={
-              ["etch.social", "beta.etch.social", "snort.social"].includes(
-                window.location.hostname
-              )
-                ? "0x4AAAAAAACsEd8XuwpPTFwz"
-                : "3x00000000000000000000FF"
-            }
-            data-callback="cf_turnstile_callback"
-          ></div>
-        </>
-      )
-    } else {
-      view = (
-        <div>
-          <p>
-            Your etch username is ${this.state.profile?.nip05?.split("@")[0]}. On other
-            nostr compatible apps you can be found with ${this.state.profile?.nip05}. This
-            not an email!
-          </p>
-          {/* <form className="flex flex-col gap-4" onSubmit={(e) => this.showChallenge(e)}>
-            <div className="flex flex-row gap-4">
-              <input
-                className="input input-bordered"
-                type="text"
-                placeholder="Username"
-                value={this.state.newUserName}
-                onInput={(e) => this.onNewUserNameChange(e)}
-              />
-              <button className="btn btn-primary" type="submit">
-                Register
-              </button>
-            </div>
-            <div>
-              {this.state.newUserNameValid ? (
-                <>
-                  <span className="success">Username is available</span>
-                  <AccountName name={this.state.newUserName} link={false} />
-                </>
-              ) : (
-                <span className="error">{this.state.invalidUsernameMessage}</span>
-              )}
-            </div>
-          </form> */}
-        </div>
-      )
-    }
+  render() {
+    const username = this.state.profile?.nip05.split("@")[0]
 
     return (
       <>
-        {view}
-        <p>
-          <a href="https://etch.social">Etch.social</a>
-        </p>
+        <AccountName name={username} />
+        <div className="mt-4">
+          <button
+            className="btn btn-warning"
+            onClick={() => {
+              if (this.state.showPrivateKey) {
+                // If key is shown, hide it and clear timeout
+                if (this.hideKeyTimeout) {
+                  clearTimeout(this.hideKeyTimeout)
+                }
+                this.setState({showPrivateKey: false})
+              } else {
+                // If key is hidden, show it
+                this.showPrivateKey()
+              }
+            }}
+          >
+            {this.state.showPrivateKey ? "Hide" : "Show"} Private Key
+          </button>
+          {this.state.showPrivateKey && this.state.privateKey && (
+            <div className="mt-2 p-4 bg-base-200 rounded-lg break-all">
+              <p className="text-warning mb-2">
+                ⚠️ Never share your private key with anyone!
+              </p>
+              <code>{this.state.privateKey}</code>
+            </div>
+          )}
+
+          <p>
+            Your etch username is {this.state.profile?.nip05?.split("@")[0]}. On other
+            nostr compatible apps you can be found with {this.state.profile?.nip05}. This
+            not an email!
+          </p>
+        </div>
+        {auth.currentUser && !auth.currentUser.emailVerified && (
+          <button
+            className="btn btn-primary mt-2"
+            onClick={() => this.resendVerificationEmail()}
+          >
+            Resend Verification Email
+          </button>
+        )}
       </>
     )
   }
 
-  async onNewUserNameChange(e: any) {
-    const newUserName = e.target.value
-    if (newUserName.length === 0) {
-      this.setState({
-        newUserName,
-        newUserNameValid: false,
-        invalidUsernameMessage: "",
-      })
-      return
+  async showPrivateKey() {
+    // Clear any existing timeout
+    if (this.hideKeyTimeout) {
+      clearTimeout(this.hideKeyTimeout)
     }
 
-    if (newUserName.length < 8 || newUserName.length > 15) {
-      this.setState({
-        newUserName,
-        newUserNameValid: false,
-        invalidUsernameMessage: "Name must be between 8 and 15 characters",
-      })
-      return
-    }
-    if (!newUserName.match(/^[a-z0-9_.]+$/)) {
-      this.setState({
-        newUserName,
-        newUserNameValid: false,
-        invalidUsernameMessage:
-          "Username must only contain lowercase letters and numbers",
-      })
-      return
-    }
-    this.setState({
-      newUserName,
-      invalidUsernameMessage: "",
+    // Get private key from localState
+    localState.get("user/privateKey").once((privKey: string | undefined) => {
+      this.setState({privateKey: privKey, showPrivateKey: true})
+
+      // Set timeout to hide after 30 seconds
+      this.hideKeyTimeout = setTimeout(() => {
+        this.setState({showPrivateKey: false})
+      }, 30000)
     })
-    this.checkAvailabilityFromAPI(newUserName)
   }
 
-  checkAvailabilityFromAPI = async (name: string) => {
-    const res = await fetch(
-      `https://api.etch.social/user/available?name=${encodeURIComponent(name)}`
-    )
-    if (name !== this.state.newUserName) {
-      return
-    }
-    if (res.status < 500) {
-      const json = await res.json()
-      if (json.available) {
-        this.setState({newUserNameValid: true})
-      } else {
-        this.setState({
-          newUserNameValid: false,
-          invalidUsernameMessage: json.message,
-        })
+  async resendVerificationEmail() {
+    try {
+      const user = auth.currentUser
+      if (!user) {
+        throw new Error("No user is currently signed in")
       }
-    } else {
-      this.setState({
-        newUserNameValid: false,
-        invalidUsernameMessage: "Error checking username availability",
-      })
-    }
-  }
-
-  showChallenge(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    if (!this.state.newUserNameValid) {
-      return
-    }
-    this.setState({showChallenge: true}, () => {
-      // Dynamically injecting Cloudflare script
-      if (
-        !document.querySelector(
-          'script[src="https://challenges.cloudflare.com/turnstile/v0/api.js"]'
-        )
-      ) {
-        const script = document.createElement("script")
-        script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js"
-        script.async = true
-        script.defer = true
-        document.body.appendChild(script)
-      }
-    })
-  }
-
-  async register(cfToken: any) {
-    console.log("register", cfToken)
-    const event = new NDKEvent(ndk())
-    event.kind = 1
-    event.content = `etch.social/${this.state.newUserName}`
-    await event.sign()
-    // post signed event as request body to https://api.etch.social/user/confirm_user
-    const res = await fetch("https://api.etch.social/user/signup", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({event: await event.toNostrEvent(), cfToken}),
-    })
-    if (res.status === 200) {
-      this.setState({
-        error: null,
-        existing: {
-          confirmed: true,
-          name: this.state.newUserName,
-        },
-      })
-      delete window.cf_turnstile_callback
-    } else {
-      res
-        .json()
-        .then((json) => {
-          this.setState({error: json.message || "error"})
-        })
-        .catch(() => {
-          this.setState({error: "error"})
-        })
-    }
-  }
-
-  async enableReserved() {
-    const event = new NDKEvent(ndk())
-    event.kind = 1
-    event.content = `etch.social/${this.state.newUserName}`
-    await event.sign()
-    // post signed event as request body to https://api.etch.social/user/confirm_user
-    const res = await fetch("https://api.etch.social/user/confirm_user", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(event.toNostrEvent()),
-    })
-    if (res.status === 200) {
-      this.setState({
-        error: null,
-        existing: {confirmed: true, name: this.state.existing.name},
-      })
-    } else {
-      res
-        .json()
-        .then((json) => {
-          this.setState({error: json.message || "error"})
-        })
-        .catch(() => {
-          this.setState({error: "error"})
-        })
-    }
-  }
-
-  async declineReserved() {
-    if (
-      !window.confirm(
-        `Are you sure you want to decline etch.social/${this.state.newUserName}?`
-      )
-    ) {
-      return
-    }
-    const event = new NDKEvent(ndk())
-    event.kind = 1
-    event.content = `decline etch.social/${this.state.newUserName}`
-    await event.sign()
-    const res = await fetch("https://api.etch.social/user/decline_user", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(event.toNostrEvent()),
-    })
-    if (res.status === 200) {
-      this.setState({confirmSuccess: false, error: null, existing: null})
-    } else {
-      res
-        .json()
-        .then((json) => {
-          this.setState({error: json.message || "error"})
-        })
-        .catch(() => {
-          this.setState({error: "error"})
-        })
+      await sendEmailVerification(user)
+      alert("Verification email has been sent!")
+    } catch (error) {
+      console.error("Error resending verification email:", error)
+      alert("Failed to resend verification email. Please try again later.")
     }
   }
 
@@ -304,8 +122,6 @@ class IrisAccount extends Component {
           this.checkExistingAccount(myPub)
         }
       }
-
-      this.checkExistingAccount(myPub)
     })
   }
 
@@ -314,6 +130,12 @@ class IrisAccount extends Component {
     if (res.status === 200) {
       const json = await res.json()
       this.setState({existing: json})
+    }
+  }
+
+  componentWillUnmount() {
+    if (this.hideKeyTimeout) {
+      clearTimeout(this.hideKeyTimeout)
     }
   }
 }
