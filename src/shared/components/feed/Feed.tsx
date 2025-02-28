@@ -2,9 +2,9 @@ import {useEffect, useMemo, useRef, useState, useCallback, ReactNode} from "reac
 import {NDKEvent, NDKFilter} from "@nostr-dev-kit/ndk"
 
 import InfiniteScroll from "@/shared/components/ui/InfiniteScroll"
-import socialGraph, {shouldHideEvent} from "@/utils/socialGraph"
 import useHistoryState from "@/shared/hooks/useHistoryState"
 import {SortedMap} from "@/utils/SortedMap/SortedMap"
+import {shouldHideEvent} from "@/utils/socialGraph"
 import FeedItem from "../event/FeedItem/FeedItem"
 import {feedCache} from "@/utils/memcache"
 import {useLocalState} from "irisdb-hooks"
@@ -188,7 +188,6 @@ function Feed({
       if (displayFilterFn && !displayFilterFn(event)) return false
       if (
         hideEventsByUnknownUsers &&
-        socialGraph().getFollowDistance(event.pubkey) >= 5 &&
         !(filters.authors && filters.authors.includes(event.pubkey))
       ) {
         return false

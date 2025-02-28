@@ -1,5 +1,5 @@
 import {requestProvider} from "@getalby/bitcoin-connect"
-import {shouldHideEvent} from "@/utils/socialGraph.ts"
+// import {shouldHideEvent} from "@/utils/socialGraph.ts"
 import useProfile from "@/shared/hooks/useProfile.ts"
 import {UserContext} from "@/context/UserContext.tsx"
 import {useContext, useEffect, useState} from "react"
@@ -93,7 +93,7 @@ function FeedItemZap({event}: FeedItemZapProps) {
       }, 300)
 
       sub?.on("event", (zapEvent: NDKEvent) => {
-        if (shouldHideEvent(zapEvent)) return
+        // if (shouldHideEvent(zapEvent)) return
         const invoice = zapEvent.tagValue("bolt11")
         if (invoice) {
           const decodedInvoice = bolt11.decode(invoice)

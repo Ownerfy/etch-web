@@ -1,25 +1,19 @@
 import {useCallback, useMemo, useEffect, useState} from "react"
 import {NDKEvent} from "@nostr-dev-kit/ndk"
 
-import {
-  getEventReplyingTo,
-  defaultFeedFilter,
-  isGem,
-  isIssue,
-  isPR,
-  hasEtchTag,
-} from "@/utils/nostr"
 import PublicKeyQRCodeButton from "@/shared/components/user/PublicKeyQRCodeButton"
+import {defaultFeedFilter, isGem, isIssue, isPR} from "@/utils/nostr"
 
 import MiddleHeader from "@/shared/components/header/MiddleHeader"
 import {fnByFilter, widgetFilterKinds} from "@/utils/filtering"
 import useHistoryState from "@/shared/hooks/useHistoryState"
 import Trending from "@/shared/components/feed/Trending"
-import {seenEventIds, feedCache} from "@/utils/memcache"
 // import NotificationPrompt from "./NotificationPrompt"
 import Feed from "@/shared/components/feed/Feed.tsx"
 import {hasVideo} from "@/shared/components/embed"
 import useFollows from "@/shared/hooks/useFollows"
+// import {seenEventIds, feedCache} from "@/utils/memcache"
+import {feedCache} from "@/utils/memcache"
 // import socialGraph from "@/utils/socialGraph"
 import {useLocalState} from "irisdb-hooks"
 import {localState} from "irisdb"
@@ -29,16 +23,17 @@ const UNSEEN_CACHE_KEY = "unseenFeed"
 const tabs = [
   {
     name: "Global",
-    path: "adventure",
+    path: "global",
     showRepliedTo: false,
     filter: {
       kinds: [1],
       limit: 100,
     },
     cacheKey: "globalFeed",
-    fetchFilterFn: (e: NDKEvent) => !getEventReplyingTo(e), // && socialGraph().getFollowDistance(e.pubkey) <= 20,
+    // fetchFilterFn: (e: NDKEvent) => !getEventReplyingTo(e), // && socialGraph().getFollowDistance(e.pubkey) <= 20,
   },
   {
+    // Filter don't matter here because it just triggers the trending element
     name: "Trending",
     path: "trending",
     showRepliedTo: false,
@@ -53,7 +48,7 @@ const tabs = [
     },
     cacheKey: "etchFeed",
     showRepliedTo: true,
-    fetchFilterFn: (e: NDKEvent) => hasEtchTag(e),
+    // fetchFilterFn: (e: NDKEvent) => hasEtchTag(e),
   },
   // {
   //   name: "Latest",
@@ -73,26 +68,26 @@ const tabs = [
     cacheKey: "videoFeed",
     fetchFilterFn: (e: NDKEvent) => {
       const isVideo = hasVideo(e)
-      const isNotReply = !getEventReplyingTo(e)
-      return Boolean(isVideo) && isNotReply // Force boolean conversion
+      // const isNotReply = !getEventReplyingTo(e)
+      return Boolean(isVideo) // && isNotReply // Force boolean conversion
     },
   },
-  {
-    name: "Unseen",
-    path: "unseen",
-    cacheKey: UNSEEN_CACHE_KEY,
-    showRepliedTo: false,
-    filter: {
-      kinds: [1],
-      limit: 100,
-    },
-    fetchFilterFn: (e: NDKEvent) => !getEventReplyingTo(e) && !seenEventIds.has(e.id),
-  },
+  // {
+  //   name: "Unseen",
+  //   path: "unseen",
+  //   cacheKey: UNSEEN_CACHE_KEY,
+  //   showRepliedTo: false,
+  //   filter: {
+  //     kinds: [1],
+  //     limit: 100,
+  //   },
+  //   fetchFilterFn: (e: NDKEvent) => !getEventReplyingTo(e) && !seenEventIds.has(e.id),
+  // },
   {
     name: "Following",
-    path: "replies",
+    path: "following", // When filters are not present the authors just gets added
     cacheKey: "repliesFeed",
-    displayFilterFn: (e: NDKEvent) => !!getEventReplyingTo(e), //socialGraph().getFollowDistance(e.pubkey) <= 1,
+    // displayFilterFn: (e: NDKEvent) => !!getEventReplyingTo(e), //socialGraph().getFollowDistance(e.pubkey) <= 1,
   },
 ]
 
@@ -172,8 +167,10 @@ function HomeFeedEvents() {
         }
         return filters.kinds.includes(event.kind!)
       }
-      const tabFilter = activeTabItem.displayFilterFn
-      return tabFilter ? tabFilter(event) : true
+      // There are none so this throws and error right now
+      // const tabFilter = activeTabItem.displayFilterFn
+      // return tabFilter ? tabFilter(event) : true
+      return true
     },
     [activeTabItem, filters, widgetFilter]
   )

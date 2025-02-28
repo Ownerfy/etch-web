@@ -40,12 +40,12 @@ async function generateTextImage(text: string, leftAligned: boolean) {
   ctx.fillStyle = "black"
 
   if (text.length > 500) {
-    text = text.substring(0, 500) + " ..."
+    text = text.substring(0, 430) + " ..."
   }
 
   drawText(ctx, text, {
     x: 26,
-    y: 40,
+    y: 33,
     width: 545,
     height: 540,
     fontSize: 24,
@@ -75,8 +75,11 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadError, setUploadError] = useState<string | null>(null)
 
-  // New state for checkboxes and custom title
-  const [publishAsNft, setPublishAsNft] = useState(true)
+  // Update this state definition to handle string type properly
+  const [publishAsNft, setPublishAsNft] = useLocalState(
+    "user/publishAsNft",
+    localStorage.getItem("publishAsNft") || "false"
+  )
   const [customTitleCheckbox, setCustomTitleCheckbox] = useState(false)
   const [customTitle, setCustomTitle] = useState("")
 
@@ -112,7 +115,7 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
   }, [])
 
   function refreshImagePreviewUrl() {
-    if (publishAsNft && !uploadedVideo && uploadedImages.size === 0) {
+    if (publishAsNft === "true" && !uploadedVideo && uploadedImages.size === 0) {
       generateTextImage(noteContent, isLeftAligned)
         .then(setGeneratedImageUrl)
         .catch(console.error)
@@ -127,6 +130,13 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
 
   const handleContentChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     setNoteContent(event.target.value)
+    // Clear error if content is within limits
+    if (
+      event.target.value.length <= 15000 &&
+      uploadError === "Content exceeds 15000 character limit"
+    ) {
+      setUploadError(null)
+    }
   }
 
   useEffect(() => {
@@ -191,6 +201,13 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
       )
       return
     }
+
+    // Add character limit check
+    if (noteContent.length > 15000) {
+      setUploadError("Content exceeds 15000 character limit")
+      return
+    }
+
     setIsPublishing(true)
 
     // Add check for video type with no video
@@ -220,7 +237,7 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
         title: customTitleCheckbox && customTitle.trim() ? customTitle.trim() : "",
         content: noteContent,
         uploadedVideo: uploadType === "video" ? uploadedVideo : "",
-        isNft: publishAsNft,
+        isNft: publishAsNft === "true",
         uploadedImages: uploadType === "image" ? Array.from(uploadedImages.values()) : [],
         repliedEvent:
           Object.keys(_repliedEvent).length > 0 ? JSON.stringify(_repliedEvent) : "",
@@ -237,7 +254,6 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
       setUploadedImages(new Map())
       setGeneratedImageUrl("")
       setCustomTitle("")
-      setPublishAsNft(false)
       setCustomTitleCheckbox(false)
       setIsLeftAligned(false)
       setUploadType("video")
@@ -366,10 +382,9 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
           <label className="flex items-center gap-1 cursor-pointer">
             <input
               type="checkbox"
-              checked={publishAsNft}
+              checked={publishAsNft === "true"}
               onChange={() => {
-                setCustomTitleCheckbox(!publishAsNft)
-                setPublishAsNft(!publishAsNft)
+                setPublishAsNft(publishAsNft === "true" ? "false" : "true")
               }}
             />
             <span>

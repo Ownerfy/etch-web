@@ -7,6 +7,9 @@ export default function WelcomeDialog() {
     <div className="flex flex-row items-center gap-2 justify-between card card-compact">
       <div className="card-body items-center">
         <img src={CONFIG.navLogo} alt={CONFIG.appName} className="w-12 h-12" />
+        <h2 className="text-2xl font-bold mb-4 mt-4">
+          Please check your email to verify before posting.
+        </h2>
 
         <h1 className="text-2xl font-bold mb-4 mt-4">Welcome to Etch.Social!</h1>
 

@@ -1,5 +1,5 @@
 import {NDKEvent, NDKFilter} from "@nostr-dev-kit/ndk"
-import {shouldHideEvent} from "@/utils/socialGraph"
+// import {shouldHideEvent} from "@/utils/socialGraph"
 import {useEffect, useState} from "react"
 import debounce from "lodash/debounce"
 import {ndk} from "irisdb-nostr"
@@ -53,7 +53,7 @@ function FeedItemComment({event}: FeedItemCommentProps) {
       const sub = ndk().subscribe(filter)
 
       sub?.on("event", (event: NDKEvent) => {
-        if (shouldHideEvent(event)) return
+        // if (shouldHideEvent(event)) return
         replies.add(event.id)
         debouncedSetReplyCount(replies.size)
       })

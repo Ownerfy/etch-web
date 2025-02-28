@@ -23,7 +23,7 @@ const MiddleHeader = ({title, children}: MiddleHeaderProps) => {
 
   return (
     <header
-      className="hidden cursor-pointer md:flex sticky top-0 z-10 w-full bg-base-200 bg-opacity-80 backdrop-blur-sm"
+      className="cursor-pointer md:flex sticky top-0 z-10 w-full bg-base-200 bg-opacity-80 backdrop-blur-sm"
       onClick={handleHeaderClick}
     >
       <div className="mx-auto px-4 py-3 flex items-center w-full">

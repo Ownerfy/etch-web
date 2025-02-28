@@ -1,5 +1,5 @@
-import {useMemo, useState, useEffect} from "react"
 import {useLocalState} from "irisdb-hooks"
+import {useMemo, useState} from "react"
 import {PublicKey} from "irisdb-nostr"
 import {Link} from "react-router-dom"
 
@@ -16,7 +16,7 @@ import ProxyImg from "@/shared/components/ProxyImg.tsx"
 import {Name} from "@/shared/components/user/Name.tsx"
 import useProfile from "@/shared/hooks/useProfile.ts"
 import Modal from "@/shared/components/ui/Modal.tsx"
-import socialGraph from "@/utils/socialGraph.ts"
+// import socialGraph from "@/utils/socialGraph.ts"
 import {Helmet} from "react-helmet"
 
 const ProfileHeader = ({pubKey}: {pubKey: string}) => {
@@ -29,10 +29,10 @@ const ProfileHeader = ({pubKey}: {pubKey: string}) => {
   const [showProfilePhotoModal, setShowProfilePhotoModal] = useState(false)
   const [showBannerModal, setShowBannerModal] = useState(false)
 
-  useEffect(() => {
-    const followDistance = socialGraph().getFollowDistance(pubKeyHex)
-    console.log("ProfileHeader followDistance:", followDistance)
-  }, [pubKeyHex])
+  // useEffect(() => {
+  //   const followDistance = socialGraph().getFollowDistance(pubKeyHex)
+  //   console.log("ProfileHeader followDistance:", followDistance)
+  // }, [pubKeyHex])
 
   return (
     <>

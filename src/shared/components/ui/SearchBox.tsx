@@ -3,7 +3,7 @@ import {useNavigate} from "react-router-dom"
 import classNames from "classnames"
 import {nip19} from "nostr-tools"
 
-import socialGraph, {searchIndex, SearchResult} from "@/utils/socialGraph"
+import {searchIndex, SearchResult} from "@/utils/socialGraph"
 import {UserRow} from "@/shared/components/user/UserRow"
 import {Check} from "@mui/icons-material"
 import Icon from "../Icons/Icon"
@@ -87,25 +87,25 @@ function SearchBox({
       }
 
       const results = searchIndex.search(value.trim(), {limit: MAX_RESULTS * 2})
-      const resultsWithAdjustedScores = results.map((result) => {
-        const followDistance = Math.max(
-          socialGraph().getFollowDistance(result.item.pubKey),
-          1
-        )
-        const followedByFriends = socialGraph().followedByFriends(result.item.pubKey).size
-        const adjustedScore =
-          result.score! * Math.pow(followDistance, 3) * Math.pow(0.9, followedByFriends)
+      // const resultsWithAdjustedScores = results.map((result) => {
+      //   const followDistance = Math.max(
+      //     socialGraph().getFollowDistance(result.item.pubKey),
+      //     1
+      //   )
+      //   const followedByFriends = socialGraph().followedByFriends(result.item.pubKey).size
+      //   const adjustedScore =
+      //     result.score! * Math.pow(followDistance, 3) * Math.pow(0.9, followedByFriends)
 
-        /*
-        console.log(
-          `Result: ${result.item.name}, Score: ${result.score}, Follow Distance: ${followDistance}, Followed By Friends: ${followedByFriends}, Adjusted Score: ${adjustedScore}`
-        )
-        */
+      //   /*
+      //   console.log(
+      //     `Result: ${result.item.name}, Score: ${result.score}, Follow Distance: ${followDistance}, Followed By Friends: ${followedByFriends}, Adjusted Score: ${adjustedScore}`
+      //   )
+      //   */
 
-        return {...result, adjustedScore}
-      })
+      //   return {...result, adjustedScore}
+      // })
 
-      resultsWithAdjustedScores.sort((a, b) => a.adjustedScore - b.adjustedScore)
+      // resultsWithAdjustedScores.sort((a, b) => a.adjustedScore - b.adjustedScore)
 
       if (!redirect) {
         setActiveResult(1)
@@ -116,7 +116,7 @@ function SearchBox({
         ...(searchNotes
           ? [{pubKey: "search-notes", name: `search notes: ${v}`, query: v}]
           : []),
-        ...resultsWithAdjustedScores.map((result) => result.item),
+        ...results.map((result) => result.item),
       ])
     } else {
       setSearchResults([])

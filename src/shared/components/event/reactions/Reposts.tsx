@@ -1,5 +1,5 @@
-import socialGraph, {shouldHideEvent} from "@/utils/socialGraph.ts"
 import {UserRow} from "@/shared/components/user/UserRow.tsx"
+import socialGraph from "@/utils/socialGraph.ts"
 import {NDKEvent} from "@nostr-dev-kit/ndk"
 import {useEffect, useState} from "react"
 import {ndk} from "irisdb-nostr"
@@ -17,7 +17,7 @@ export default function Reposts({event}: {event: NDKEvent}) {
       const sub = ndk().subscribe(filter)
 
       sub?.on("event", (event: NDKEvent) => {
-        if (shouldHideEvent(event)) return
+        // if (shouldHideEvent(event)) return
         setReactions((prev) => {
           const existing = prev.get(event.author.pubkey)
           if (existing) {

@@ -2,10 +2,10 @@ import {useLocalState} from "irisdb-hooks"
 
 function Content() {
   const [blurNSFW, setBlurNSFW] = useLocalState<boolean>("settings/blurNSFW", false)
-  const [hideEventsByUnknownUsers, setHideEventsByUnknownUsers] = useLocalState<boolean>(
-    "settings/hideEventsByUnknownUsers",
-    false
-  )
+  // const [hideEventsByUnknownUsers, setHideEventsByUnknownUsers] = useLocalState<boolean>(
+  //   "settings/hideEventsByUnknownUsers",
+  //   false
+  // )
   const [youtubePrivacyMode, setYoutubePrivacyMode] = useLocalState(
     "settings/youtubePrivacyMode",
     CONFIG.defaultSettings.youtubePrivacyMode
@@ -19,13 +19,13 @@ function Content() {
     <div>
       <h1 className="text-2xl mb-4">Content</h1>
       <div className="space-y-4">
-        <SettingToggle
+        {/* <SettingToggle
           checked={hideEventsByUnknownUsers}
           onChange={() =>
             handleToggleChange(setHideEventsByUnknownUsers, hideEventsByUnknownUsers)
           }
           label="Hide posts by unknown users"
-        />
+        /> */}
         <SettingToggle
           checked={blurNSFW}
           onChange={() => handleToggleChange(setBlurNSFW, blurNSFW)}

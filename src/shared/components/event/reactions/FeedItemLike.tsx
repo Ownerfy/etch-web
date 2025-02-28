@@ -1,4 +1,4 @@
-import {shouldHideEvent} from "@/utils/socialGraph"
+// import {shouldHideEvent} from "@/utils/socialGraph"
 import {LRUCache} from "typescript-lru-cache"
 import {NDKEvent} from "@nostr-dev-kit/ndk"
 import {statCalc} from "@/utils/utils.ts"
@@ -62,7 +62,7 @@ export const FeedItemLike = ({event}: {event: NDKEvent}) => {
       }, 300)
 
       sub?.on("event", (likeEvent: NDKEvent) => {
-        if (shouldHideEvent(likeEvent)) return
+        // if (shouldHideEvent(likeEvent)) return
         setLikesByAuthor((prev) => {
           const newSet = new Set(prev)
           newSet.add(likeEvent.pubkey)

@@ -41,7 +41,7 @@ function Settings() {
         {
           icon: "profile",
           iconBg: "bg-purple-500",
-          message: "etch.social username",
+          message: "Accounts",
           path: "/settings/etch",
         },
       ],

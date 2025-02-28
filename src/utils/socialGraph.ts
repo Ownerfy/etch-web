@@ -229,7 +229,7 @@ export const socialGraphLoaded = new Promise((resolve) => {
   }, true)
 })
 
-let hideEventsByUnknownUsers = true
+let hideEventsByUnknownUsers = false
 localState.get("settings/hideEventsByUnknownUsers").on((v) => {
   hideEventsByUnknownUsers = v as boolean
 })

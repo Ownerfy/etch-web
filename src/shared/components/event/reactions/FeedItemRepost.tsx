@@ -12,7 +12,7 @@ import {LRUCache} from "typescript-lru-cache"
 import {statCalc} from "@/utils/utils.ts"
 import Icon from "../../Icons/Icon"
 
-import {shouldHideEvent} from "@/utils/socialGraph"
+// import {shouldHideEvent} from "@/utils/socialGraph"
 import {localState} from "irisdb"
 
 interface FeedItemRepostProps {
@@ -91,7 +91,7 @@ function FeedItemRepost({event}: FeedItemRepostProps) {
       }, 300)
 
       sub?.on("event", (repostEvent: NDKEvent) => {
-        if (shouldHideEvent(repostEvent)) return
+        // if (shouldHideEvent(repostEvent)) return
         setRepostsByAuthor((prev) => {
           const newSet = new Set(prev)
           newSet.add(repostEvent.pubkey)
