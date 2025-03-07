@@ -80,7 +80,7 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
     "user/publishAsNft",
     localStorage.getItem("publishAsNft") || "false"
   )
-  const [publishOnBlueSky] = useLocalState(
+  const [publishOnBlueSky, setPublishOnBlueSky] = useLocalState(
     "user/publishOnBlueSky",
     localStorage.getItem("publishOnBlueSky") || "false"
   )
@@ -97,7 +97,7 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
   const [isPublishing, setIsPublishing] = useState(false)
 
   // Add this near the other useLocalState declarations
-  // const [bskyDid] = useLocalState("bsky/did", "")
+  const [bskyDid] = useLocalState("bsky/did", "")
 
   // Add this near other useLocalState declarations
   const [addLinkBack, setAddLinkBack] = useLocalState(
@@ -303,13 +303,13 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
   }
 
   // Modify the publishOnBlueSky checkbox handler
-  // const handleBlueSkyToggle = () => {
-  //   if (publishOnBlueSky === "false" && !bskyDid) {
-  //     alert("Please connect your BlueSky account in Settings > Accounts")
-  //     return
-  //   }
-  //   setPublishOnBlueSky(publishOnBlueSky === "true" ? "false" : "true")
-  // }
+  const handleBlueSkyToggle = () => {
+    if (publishOnBlueSky === "false" && !bskyDid) {
+      alert("Please connect your BlueSky account in Settings > Accounts")
+      return
+    }
+    setPublishOnBlueSky(publishOnBlueSky === "true" ? "false" : "true")
+  }
 
   return (
     <div className={`overflow-y-auto max-h-screen md:w-[600px]`}>
@@ -485,7 +485,7 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
           )}
         </div>
         <div className="flex items-center gap-4">
-          {/* <label className="flex items-center gap-1 cursor-pointer">
+          <label className="flex items-center gap-1 cursor-pointer">
             <input
               type="checkbox"
               checked={publishOnBlueSky === "true"}
@@ -493,10 +493,10 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
               onChange={handleBlueSkyToggle}
             />
             <span>Publish on BlueSky</span>
-          </label> */}
+          </label>
 
           {/* Show additional options when BlueSky publishing is enabled */}
-          {false && (
+          {publishOnBlueSky === "true" && (
             <label className="flex items-center gap-1 cursor-pointer">
               <input
                 type="checkbox"
