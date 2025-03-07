@@ -42,6 +42,10 @@ const Layout = () => {
     "home/showWelcomeDialog",
     false
   )
+  const [showLoginAccountDialog, setShowLoginAccountDialog] = useLocalState(
+    "home/showLoginAccountDialog",
+    false
+  )
   const [showForgotPasswordDialog, setShowForgotPasswordDialog] = useLocalState(
     "home/showForgotPasswordDialog",
     false
@@ -145,6 +149,11 @@ const Layout = () => {
             >
               <NoteCreator handleClose={() => setNewPostOpen(!newPostOpen)} />
             </div>
+          </Modal>
+        )}
+        {showLoginAccountDialog && (
+          <Modal onClose={() => setShowLoginAccountDialog(false)}>
+            <LoginDialog defaultToSignIn={true} />
           </Modal>
         )}
         {showLoginDialog && (

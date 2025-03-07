@@ -34,6 +34,10 @@ export default function SignUp({onClose}: SignUpProps) {
   const [isAgeConfirmed, setIsAgeConfirmed] = useState(false)
   const [, setShowLoginDialog] = useLocalState("home/showLoginDialog", false)
   const [, setShowWelcomeDialog] = useLocalState("home/showWelcomeDialog", false)
+  const [, setShowLoginAccountDialog] = useLocalState(
+    "home/showLoginAccountDialog",
+    false
+  )
   const inputRef = useRef<HTMLInputElement>(null)
   const [isUsernameAvailable, setIsUsernameAvailable] = useState(true)
   const [hasNostrKey, setHasNostrKey] = useState(false)
@@ -280,6 +284,7 @@ export default function SignUp({onClose}: SignUpProps) {
         })
 
         profileEvent.publish()
+        setShowLoginAccountDialog(false)
         setShowLoginDialog(false)
         setShowWelcomeDialog(true)
       } catch (error: unknown) {

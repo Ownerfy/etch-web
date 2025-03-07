@@ -17,17 +17,24 @@ export default function SignIn({onClose}: SignInProps) {
   const [, setBskyDid] = useLocalState("bsky/did", "")
   const [, setBskyAvatar] = useLocalState("bsky/avatar", "")
   const [, setShowLoginDialog] = useLocalState("home/showLoginDialog", false)
+  const [, setShowLoginAccountDialog] = useLocalState(
+    "home/showLoginAccountDialog",
+    false
+  )
   const [, setShowForgotPasswordDialog] = useLocalState(
     "home/showForgotPasswordDialog",
     false
   )
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    setIsLoading(true)
 
     if (!email || !password) {
       setError("Please fill in all fields")
+      setIsLoading(false)
       return
     }
 
@@ -44,9 +51,11 @@ export default function SignIn({onClose}: SignInProps) {
       const privateKeySigner = new NDKPrivateKeySigner(privKey)
       ndk().signer = privateKeySigner
       setShowLoginDialog(false)
-      onClose()
+      setShowLoginAccountDialog(false)
     } catch {
       setError("Invalid email or password")
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -77,8 +86,8 @@ export default function SignIn({onClose}: SignInProps) {
           onChange={(e) => setPassword(e.target.value)}
         />
         {error && <p className="text-error text-sm">{error}</p>}
-        <button type="submit" className="btn btn-primary">
-          Sign In
+        <button type="submit" className="btn btn-primary" disabled={isLoading}>
+          {isLoading ? "Loading..." : "Sign In"}
         </button>
         <button
           type="button"
@@ -88,12 +97,11 @@ export default function SignIn({onClose}: SignInProps) {
           Forgot Password?
         </button>
       </form>
-      <div
-        className="flex flex-col items-center justify-center gap-4 flex-wrap border-t pt-4 cursor-pointer"
-        onClick={onClose}
-      >
-        <span className="hover:underline">Don&apos;t have an account?</span>
-        <button className="btn btn-sm btn-neutral">Sign up</button>
+      <div className="flex flex-col items-center justify-center gap-4 flex-wrap border-t pt-4 cursor-pointer">
+        <span>Don&apos;t have an account?</span>
+        <button onClick={onClose} className="btn btn-sm btn-neutral">
+          Sign up
+        </button>
       </div>
     </div>
   )

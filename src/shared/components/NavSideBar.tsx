@@ -1,5 +1,13 @@
+import {
+  useRef,
+  ReactNode,
+  MouseEventHandler,
+  useMemo,
+  useState,
+  useEffect,
+  MouseEvent,
+} from "react"
 import UnseenNotificationsBadge from "@/shared/components/header/UnseenNotificationsBadge.tsx"
-import {useRef, ReactNode, MouseEventHandler, useMemo, useState, useEffect} from "react"
 import PublishButton from "@/shared/components/ui/PublishButton.tsx"
 import {UserRow} from "@/shared/components/user/UserRow.tsx"
 import Icon from "@/shared/components/Icons/Icon"
@@ -42,24 +50,28 @@ const NavItem = ({
       to={to}
       onClick={onClick}
       className={({isActive}) =>
-        classNames(className, {
-          "bg-base-100": isActive,
-          "rounded-full md:aspect-square xl:aspect-auto flex md:justify-center xl:justify-start items-center":
-            true,
-        })
+        classNames(
+          className,
+          "rounded-full md:aspect-square xl:aspect-auto flex md:justify-center xl:justify-start items-center gap-2 px-4 py-2",
+          {
+            "bg-base-100": isActive,
+          }
+        )
       }
     >
       {({isActive}) => (
         <>
-          <Icon
-            className="w-6 h-6"
-            name={
-              (isActive ? activeIcon : inactiveIcon) ||
-              (icon ? `${icon}-${isActive ? "solid" : "outline"}` : "")
-            }
-          />
-          <span className="inline md:hidden xl:inline">{label}</span>
+          {icon && (
+            <Icon
+              className="w-6 h-6"
+              name={
+                (isActive ? activeIcon : inactiveIcon) ||
+                (icon ? `${icon}-${isActive ? "solid" : "outline"}` : "")
+              }
+            />
+          )}
           {children}
+          <span className="inline md:hidden xl:inline">{label}</span>
         </>
       )}
     </NavLink>
@@ -96,7 +108,10 @@ const NotificationNavItem = ({
   </li>
 )
 
-const navItemsConfig = (myPubKey: string) => ({
+const navItemsConfig = (
+  myPubKey: string,
+  setShowLoginAccountDialog: (show: boolean) => void
+) => ({
   home: {to: "/", icon: "home", label: "Home", display: "both"},
   wallet: {
     to: "/wallet",
@@ -135,6 +150,16 @@ const navItemsConfig = (myPubKey: string) => ({
   settings: {to: "/settings", icon: "settings", label: "Settings", display: "loggedIn"},
   about: {to: "/about", icon: "info", label: "About", display: "both"},
   search: {to: "/search", icon: "search", label: "Search", display: "both"},
+  signIn: {
+    to: "/sign-in",
+    icon: "sign-in",
+    display: "loggedOut",
+    label: "Sign in",
+    onClick: (e: MouseEvent) => {
+      e.preventDefault()
+      setShowLoginAccountDialog(true)
+    },
+  },
 })
 
 const NavSideBar = () => {
@@ -142,6 +167,10 @@ const NavSideBar = () => {
   const [myPubKey] = useLocalState("user/publicKey", "")
   const [isSidebarOpen, setIsSidebarOpen] = useLocalState("isSidebarOpen", false)
   const [, setShowLoginDialog] = useLocalState("home/showLoginDialog", false)
+  const [, setShowLoginAccountDialog] = useLocalState(
+    "home/showLoginAccountDialog",
+    false
+  )
   const [isAppInstalled, setIsAppInstalled] = useState(false)
 
   useEffect(() => {
@@ -166,7 +195,11 @@ const NavSideBar = () => {
   }, [])
 
   const navItems = useMemo(() => {
-    const configItems = navItemsConfig(myPubKey)
+    const configItems = navItemsConfig(myPubKey, setShowLoginAccountDialog)
+    // Note: this is an aboslutely stupid way to do this. So basically navItemsConfig is
+    // completely ignored and you have to got config/default.json to make changes
+    // You also need to shut down the dev server and restary yarn dev to see the changes
+    // This needs to be moved to this file ASAP
     return (CONFIG.navItems as Array<keyof typeof configItems>)
       .map((key) => configItems[key])
       .filter((item) => {
@@ -192,7 +225,7 @@ const NavSideBar = () => {
 
         return shouldDisplay
       })
-  }, [myPubKey, isAppInstalled])
+  }, [myPubKey, isAppInstalled, setShowLoginAccountDialog])
 
   const logoUrl = CONFIG.navLogo
 
@@ -273,7 +306,7 @@ const NavSideBar = () => {
                 <Login className="w-5 h-5" />
               </button>
               <button
-                className="ml-2 flex md:hidden xl:flex btn btn-primary items-center gap-2"
+                className="ml-4 flex md:hidden xl:flex btn btn-primary items-center gap-2"
                 onClick={() => setShowLoginDialog(true)}
               >
                 <Login className="w-5 h-5" />

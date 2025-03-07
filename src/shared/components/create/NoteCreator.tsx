@@ -7,7 +7,6 @@ import {fetchUserCredits} from "../../services/BackendServices"
 import {Avatar} from "@/shared/components/user/Avatar.tsx"
 import HyperText from "@/shared/components/HyperText.tsx"
 import {ChangeEvent, useEffect, useState} from "react"
-import {auth} from "@/shared/services/firebase"
 import {NDKEvent} from "@nostr-dev-kit/ndk"
 import {useLocalState} from "irisdb-hooks"
 import {drawText} from "canvas-txt"
@@ -212,12 +211,12 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
   }
 
   const publish = async () => {
-    if (!auth.currentUser?.emailVerified) {
-      alert(
-        "Please verify your email to continue. Resend email from settings -> account."
-      )
-      return
-    }
+    // if (!auth.currentUser?.emailVerified) {
+    //   alert(
+    //     "Please verify your email to continue. Resend email from settings -> account."
+    //   )
+    //   return
+    // }
 
     // Add character limit check
     if (noteContent.length > 15000) {

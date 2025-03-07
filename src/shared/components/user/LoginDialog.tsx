@@ -1,15 +1,17 @@
-// import BskySignUp from "@/shared/components/user/BskySignUp"
 import SignUp from "@/shared/components/user/SignUp"
 import SignIn from "@/shared/components/user/SignIn"
-// import {useLocalState} from "irisdb-hooks"
 import {useState} from "react"
 
-export default function LoginDialog() {
-  const [showSignIn, setShowSignIn] = useState(!!window.nostr)
-  // const [bskyDid] = useLocalState("bsky/did", "")
+interface LoginDialogProps {
+  defaultToSignIn?: boolean
+}
+
+export default function LoginDialog({
+  defaultToSignIn = !!window.nostr,
+}: LoginDialogProps) {
+  const [showSignIn, setShowSignIn] = useState(defaultToSignIn)
 
   const getAuthComponent = () => {
-    // if (bskyDid) return <BskySignUp />
     if (showSignIn) return <SignIn onClose={() => setShowSignIn(false)} />
     return <SignUp onClose={() => setShowSignIn(true)} />
   }
