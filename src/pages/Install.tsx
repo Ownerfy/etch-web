@@ -110,7 +110,7 @@ function Install() {
       </div>
 
       {/* Desktop Chrome Installation */}
-      <div className="mb-8 p-6 rounded-lg bg-base-200">
+      {/* <div className="mb-8 p-6 rounded-lg bg-base-200">
         <h2 className="text-xl font-semibold mb-4 flex items-start gap-2">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -137,7 +137,7 @@ function Install() {
           </li>
           <li>Click &quot;Install&quot; in the prompt</li>
         </ol>
-      </div>
+      </div> */}
 
       {/* Benefits Section */}
       <div className="p-6 rounded-lg bg-base-200">

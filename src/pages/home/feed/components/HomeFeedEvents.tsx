@@ -22,7 +22,13 @@ const UNSEEN_CACHE_KEY = "unseenFeed"
 
 const tabs = [
   {
-    name: "Global",
+    // Filter don't matter here because it just triggers the trending element
+    name: "Nostr Trending",
+    path: "trending",
+    showRepliedTo: false,
+  },
+  {
+    name: "Nostr All",
     path: "global",
     showRepliedTo: false,
     filter: {
@@ -32,12 +38,7 @@ const tabs = [
     cacheKey: "globalFeed",
     // fetchFilterFn: (e: NDKEvent) => !getEventReplyingTo(e), // && socialGraph().getFollowDistance(e.pubkey) <= 20,
   },
-  {
-    // Filter don't matter here because it just triggers the trending element
-    name: "Trending",
-    path: "trending",
-    showRepliedTo: false,
-  },
+
   {
     name: "Etch",
     path: "etch",

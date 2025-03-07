@@ -1,6 +1,7 @@
 import {ChangeEvent, FormEvent, useEffect, useRef, useState} from "react"
 import {NDKEvent, NDKPrivateKeySigner} from "@nostr-dev-kit/ndk"
 import {createUser} from "@/shared/services/BackendServices"
+import Icon from "@/shared/components/Icons/Icon"
 import ReCAPTCHA from "react-google-recaptcha"
 import {useLocalState} from "irisdb-hooks"
 import {nip19} from "nostr-tools"
@@ -39,12 +40,20 @@ export default function SignUp({onClose}: SignUpProps) {
   const [nostrKey, setNostrKey] = useState("")
   const [translatedNostrKey, setTranslatedNostrKey] = useState("")
   const [nostrKeyError, setNostrKeyError] = useState("")
+  const [bskyDid] = useLocalState("bsky/did", "")
+  const [bskyDescription] = useLocalState("bsky/description", "")
+  const [bskyHandle] = useLocalState("bsky/handle", "")
+  const [bskyAvatar] = useLocalState("bsky/avatar", "")
+  const [bskyToken] = useLocalState("bsky/token", "")
+  const [isBskyLoading, setIsBskyLoading] = useState(false)
+  const [bskyHandleInput, setBskyHandleInput] = useState("")
+  const [bskyHandleError, setBskyHandleError] = useState("")
 
   useEffect(() => {
-    if (inputRef.current) {
+    if (inputRef.current && !bskyDid) {
       inputRef.current.focus()
     }
-  }, [inputRef.current])
+  }, [inputRef.current, bskyDid])
 
   useEffect(() => {
     const checkUsernameAvailability = async () => {
@@ -73,6 +82,13 @@ export default function SignUp({onClose}: SignUpProps) {
 
     return () => clearTimeout(debounceTimeout)
   }, [username])
+
+  useEffect(() => {
+    if (bskyHandle) {
+      const handle = bskyHandle.replace(".bsky.social", "").trim()
+      setUsername(handle)
+    }
+  }, [bskyHandle])
 
   function onNameChange(e: ChangeEvent<HTMLInputElement>) {
     setUsername(e.target.value)
@@ -169,6 +185,34 @@ export default function SignUp({onClose}: SignUpProps) {
     }
   }
 
+  const formatBskyHandle = (handle: string): string => {
+    const cleanHandle = handle.replace(".bsky.social", "").trim()
+    return cleanHandle ? `${cleanHandle}.bsky.social` : ""
+  }
+
+  const handleBskyLogin = async () => {
+    if (!bskyHandleInput.trim()) {
+      setBskyHandleError("Please enter your Bluesky handle")
+      return
+    }
+
+    setIsBskyLoading(true)
+    setBskyHandleError("")
+
+    try {
+      const formattedHandle = formatBskyHandle(bskyHandleInput)
+      const response = await axios.get(
+        `${import.meta.env.VITE_FUNCTIONS_URL}api/bsky/oauth/login`,
+        {params: {handle: formattedHandle}}
+      )
+      window.location.href = response.data.url
+    } catch (error) {
+      console.error("Failed to initiate BlueSky login:", error)
+      setSubmitError("Failed to connect with BlueSky. Please try again.")
+      setIsBskyLoading(false)
+    }
+  }
+
   async function onNewUserLogin(e: FormEvent) {
     e.preventDefault()
     setIsLoading(true)
@@ -218,6 +262,7 @@ export default function SignUp({onClose}: SignUpProps) {
           password,
           captchaToken,
           nostrKey: hasNostrKey ? translatedNostrKey : null,
+          bskyToken: bskyToken || null,
         })
 
         localState.get("user/privateKey").put(privKey)
@@ -226,9 +271,12 @@ export default function SignUp({onClose}: SignUpProps) {
         ndk().signer = privateKeySigner
         const profileEvent = new NDKEvent(ndk())
         profileEvent.kind = 0
+
         profileEvent.content = JSON.stringify({
           display_name: username,
           nip05: `${username}@etch.social`,
+          picture: bskyAvatar,
+          about: bskyDescription,
         })
 
         profileEvent.publish()
@@ -246,6 +294,12 @@ export default function SignUp({onClose}: SignUpProps) {
     setIsLoading(false)
   }
 
+  const getButtonText = () => {
+    if (bskyDid) return "Success! Complete signup below"
+    if (isBskyLoading) return "Loading..."
+    return "Connect with BlueSky"
+  }
+
   return (
     <div className="flex flex-col gap-4 ">
       <form
@@ -253,6 +307,26 @@ export default function SignUp({onClose}: SignUpProps) {
         onSubmit={(e) => onNewUserLogin(e)}
       >
         <h1 className="text-2xl font-bold">Sign up</h1>
+
+        <button
+          type="button"
+          onClick={handleBskyLogin}
+          className={`btn gap-2 w-[300px] ${bskyDid || isBskyLoading ? "btn-disabled" : "btn-outline"}`}
+          disabled={!!bskyDid || isBskyLoading}
+        >
+          <Icon name="bluesky" size={24} />
+          {getButtonText()}
+        </button>
+        <input
+          className="input input-bordered w-[300px]"
+          type="text"
+          placeholder={bskyDid ? "Your Etch handle can be different" : "BlueSky handle"}
+          value={bskyHandleInput}
+          onChange={(e) => setBskyHandleInput(e.target.value)}
+          disabled={!!bskyDid || isBskyLoading}
+        />
+        {bskyHandleError && <p className="text-red-500">{bskyHandleError}</p>}
+        {!bskyDid && <div className="divider">OR</div>}
         <input
           ref={inputRef}
           autoComplete="Username"
@@ -331,7 +405,7 @@ export default function SignUp({onClose}: SignUpProps) {
             onChange={(e) => setHasNostrKey(e.target.checked)}
             className="checkbox"
           />
-          <label className="text-sm">I already have a Nostr private key</label>
+          <label className="text-sm">I have a Nostr private key</label>
         </div>
         {hasNostrKey && (
           <>
@@ -350,10 +424,11 @@ export default function SignUp({onClose}: SignUpProps) {
           type="submit"
           disabled={isLoading || !isChecked || !isAgeConfirmed}
         >
-          {isLoading ? "Loading..." : "Go"}
+          {isLoading ? "Loading..." : "Complete"}
         </button>
         {submitError && <p className="text-red-500">{submitError}</p>}
       </form>
+
       <div
         className="flex flex-col items-center justify-center gap-4 flex-wrap border-t pt-4 cursor-pointer"
         onClick={onClose}

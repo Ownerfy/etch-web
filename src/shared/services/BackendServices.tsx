@@ -16,12 +16,14 @@ const createUser = async ({
   password,
   captchaToken,
   nostrKey,
+  bskyToken,
 }: {
   email: string
   username: string
   password: string
   captchaToken: string | null
   nostrKey: string | null
+  bskyToken: string | null
 }) => {
   const result = await createUserWithEmailAndPassword(auth, email, password)
 
@@ -33,7 +35,14 @@ const createUser = async ({
   }
 
   const {uid} = user
-  const payload = {username, email, uid, captchaToken, nostrKey}
+  const payload = {
+    username,
+    email,
+    uid,
+    captchaToken,
+    nostrKey,
+    bskyToken,
+  }
   const response = await axios.post(
     `${import.meta.env.VITE_FUNCTIONS_URL}api/newUser`,
     payload
@@ -49,10 +58,10 @@ const signIn = async ({email, password}: {email: string; password: string}) => {
 
   // Get user data from backend
   const {
-    data: {privKey, nostrPubKey},
+    data: {privKey, nostrPubKey, bskyData},
   } = await axios.get(`${import.meta.env.VITE_FUNCTIONS_URL}api/getUser`)
 
-  return {privKey, nostrPubKey}
+  return {privKey, nostrPubKey, bskyData}
 }
 
 export {signIn}
@@ -79,6 +88,8 @@ const publishNote = async ({
   isNft,
   uploadedImages,
   repliedEvent,
+  addLinkBack,
+  publishOnBlueSky,
   quotedEvent,
   generatedImageUrl,
 }: {
@@ -90,6 +101,8 @@ const publishNote = async ({
   repliedEvent: string | null
   quotedEvent: string | null
   generatedImageUrl: string | null
+  publishOnBlueSky: boolean
+  addLinkBack: boolean
 }) => {
   const response = await axios.post(
     `${import.meta.env.VITE_FUNCTIONS_URL}api/social/post`,
@@ -98,12 +111,18 @@ const publishNote = async ({
       content,
       uploadedVideo,
       isNft,
+      publishOnBlueSky,
+      addLinkBack,
       uploadedImages,
       repliedEvent,
       quotedEvent,
       generatedImageUrl,
     }
   )
+  // if status is not 200, throw an error
+  if (response.status !== 200) {
+    throw new Error(response.data.message)
+  }
   return response.data
 }
 
@@ -145,3 +164,21 @@ const fetchUserCredits = async () => {
 }
 
 export {fetchUserCredits}
+
+const bskyAuthLogin = async (handle: string, redirectUrl: string) => {
+  const response = await axios.get(`api/bsky/oauth/authLogin`, {
+    params: {handle, redirectUrl},
+  })
+  return response.data
+}
+
+export {bskyAuthLogin}
+
+const getBskyTimeline = async (cursor: string | null) => {
+  const response = await axios.get(`api/bsky/timeline`, {
+    params: {cursor},
+  })
+  return response.data
+}
+
+export {getBskyTimeline}

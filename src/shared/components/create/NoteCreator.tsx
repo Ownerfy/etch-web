@@ -16,6 +16,7 @@ import {drawText} from "canvas-txt"
 import {useNavigate} from "react-router-dom"
 import {nip19} from "nostr-tools"
 import Textarea from "./Textarea"
+import {AxiosError} from "axios"
 
 type handleCloseFunction = () => void
 
@@ -80,6 +81,10 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
     "user/publishAsNft",
     localStorage.getItem("publishAsNft") || "false"
   )
+  const [publishOnBlueSky] = useLocalState(
+    "user/publishOnBlueSky",
+    localStorage.getItem("publishOnBlueSky") || "false"
+  )
   const [customTitleCheckbox, setCustomTitleCheckbox] = useState(false)
   const [customTitle, setCustomTitle] = useState("")
 
@@ -91,6 +96,15 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
 
   // Add this state near other state declarations
   const [isPublishing, setIsPublishing] = useState(false)
+
+  // Add this near the other useLocalState declarations
+  // const [bskyDid] = useLocalState("bsky/did", "")
+
+  // Add this near other useLocalState declarations
+  const [addLinkBack, setAddLinkBack] = useLocalState(
+    "bsky/addLinkBack",
+    localStorage.getItem("bsky/addLinkBack") || "true"
+  )
 
   // Add credit fetching
   const getUserCredits = async () => {
@@ -168,10 +182,13 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
       return
     }
 
+    // Automatically switch the upload type based on file type
+    setUploadType(type)
+
     if (type === "image") {
       setUploadedImages((prev) => {
-        if (prev.size >= 5) {
-          setUploadError("Cannot upload more than 5 images. Delete some to upload more.")
+        if (prev.size >= 4) {
+          setUploadError("Cannot upload more than 4 images. Delete some to upload more.")
           return prev
         }
         const newMap = new Map(prev)
@@ -238,6 +255,8 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
         content: noteContent,
         uploadedVideo: uploadType === "video" ? uploadedVideo : "",
         isNft: publishAsNft === "true",
+        addLinkBack: addLinkBack === "true",
+        publishOnBlueSky: publishOnBlueSky === "true",
         uploadedImages: uploadType === "image" ? Array.from(uploadedImages.values()) : [],
         repliedEvent:
           Object.keys(_repliedEvent).length > 0 ? JSON.stringify(_repliedEvent) : "",
@@ -263,16 +282,35 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
       handleClose()
       navigate(`/${nip19.noteEncode(eventId)}`)
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error("Failed to publish note", error.message)
-        setUploadError(error.message)
+      if (error instanceof AxiosError) {
+        // Check if it's an axios error with response data
+        const axiosError = error as AxiosError<{message: string}>
+        if (axiosError.response?.data?.message) {
+          setUploadError(axiosError.response.data.message)
+        } else {
+          console.error("Failed to publish note", error.message)
+          setUploadError(error.message)
+        }
       } else {
         setUploadError("Failed to publish note")
       }
+      // This is needed because the backend could have deleted the first links
+      setUploadedVideo("")
+      setUploadedImages(new Map())
+      setGeneratedImageUrl("")
     } finally {
       setIsPublishing(false)
     }
   }
+
+  // Modify the publishOnBlueSky checkbox handler
+  // const handleBlueSkyToggle = () => {
+  //   if (publishOnBlueSky === "false" && !bskyDid) {
+  //     alert("Please connect your BlueSky account in Settings > Accounts")
+  //     return
+  //   }
+  //   setPublishOnBlueSky(publishOnBlueSky === "true" ? "false" : "true")
+  // }
 
   return (
     <div className={`overflow-y-auto max-h-screen md:w-[600px]`}>
@@ -301,6 +339,18 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
           quotedEvent={quotedEvent}
           onRef={setTextarea}
         />
+        {/* Add BlueSky character limit warning */}
+        {publishOnBlueSky === "true" && (
+          <div className="text-warning text-sm">
+            {noteContent.length > (addLinkBack === "true" ? 214 : 300) && (
+              <p>
+                ⚠️ Only the first {addLinkBack === "true" ? "214" : "300"} characters will
+                be shown on BlueSky. Tip: add link back to the full content.
+                {addLinkBack === "true" && " (due to link back being enabled)"}
+              </p>
+            )}
+          </div>
+        )}
         {uploading && (
           <div className="w-full mt-2">
             <div className="bg-neutral rounded-full h-2.5">
@@ -330,13 +380,16 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
             onChange={(e) => setUploadType(e.target.value)}
           >
             <option value="video">Video (1)</option>
-            <option value="image">Image (5)</option>
+            <option value="image">Image (4)</option>
           </select>
           <div className="flex-1"></div>
 
           <button
             className="btn btn-primary rounded-full"
-            disabled={!noteContent || isPublishing}
+            disabled={
+              (!noteContent && !uploadedVideo && uploadedImages.size === 0) ||
+              isPublishing
+            }
             onClick={publish}
           >
             {isPublishing ? "Publishing..." : "Publish"}
@@ -383,13 +436,13 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
             <input
               type="checkbox"
               checked={publishAsNft === "true"}
+              className="toggle toggle-primary mr-2"
               onChange={() => {
                 setPublishAsNft(publishAsNft === "true" ? "false" : "true")
               }}
             />
             <span>
-              {" "}
-              <svg
+              {/* {" "} <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="w-4 h-4 inline-block mb-1"
                 fill="none"
@@ -402,32 +455,57 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
                   strokeWidth={2}
                   d="M13.828 10.172a4 4 0 115.657 5.657l-3.172 3.172a4 4 0 01-5.657-5.657M10.172 13.828a4 4 0 00-5.657-5.657L1.343 11.343a4 4 0 005.657 5.657"
                 />
-              </svg>{" "}
-              Publish On-Chain
+              </svg>{" "} */}
+              Publish on-chain
             </span>
           </label>
-          {publishAsNft && (
+          {publishAsNft === "true" && (
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={customTitleCheckbox}
+                className="checkbox checkbox-sm"
                 onChange={() => setCustomTitleCheckbox(!customTitleCheckbox)}
               />
-
-              <span>Custom Title</span>
+              <span>Custom title</span>
             </label>
           )}
-          {publishAsNft && (
+          {publishAsNft === "true" && (
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={isLeftAligned}
+                className="checkbox checkbox-sm"
                 onChange={() => {
                   setIsLeftAligned(!isLeftAligned)
                   refreshImagePreviewUrl()
                 }}
               />
-              <span>Left Align Text</span>
+              <span>Left align text</span>
+            </label>
+          )}
+        </div>
+        <div className="flex items-center gap-4">
+          {/* <label className="flex items-center gap-1 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={publishOnBlueSky === "true"}
+              className="toggle toggle-primary mr-2"
+              onChange={handleBlueSkyToggle}
+            />
+            <span>Publish on BlueSky</span>
+          </label> */}
+
+          {/* Show additional options when BlueSky publishing is enabled */}
+          {false && (
+            <label className="flex items-center gap-1 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={addLinkBack === "true"}
+                className="checkbox checkbox-sm"
+                onChange={() => setAddLinkBack(addLinkBack === "true" ? "false" : "true")}
+              />
+              <span className="text-sm">Add link back to Etch and blockchain info</span>
             </label>
           )}
         </div>
@@ -467,7 +545,7 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
         )}
 
         <div className="mt-4 min-h-16 overflow-y-scroll">
-          <div className="text-sm uppercase text-gray-500 mb-5 font-bold">Preview</div>
+          {/* <div className="text-sm uppercase text-gray-500 mb-5 font-bold">Preview</div> */}
 
           {customTitleCheckbox && customTitle.trim() && (
             <div className="mx-auto text-sm mb-8 font-bold">{customTitle}</div>
@@ -484,7 +562,7 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
 
           {!generatedImageUrl && (
             <>
-              <HyperText>{noteContent}</HyperText>
+              {/* <HyperText>{noteContent}</HyperText> */}
               {(() => {
                 if (uploadType === "video" && uploadedVideo) {
                   return <HyperText>{uploadedVideo}</HyperText>

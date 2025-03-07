@@ -1,0 +1,18 @@
+{
+    "client_id": "https://etch.social/client-metadata.json",
+    "client_name": "Etch.social",
+    "client_uri": "https://etch.social",
+    "tos_uri": "https://etch.social/terms",
+    "policy_uri": "https://etch.social/privacy",
+    "application_type": "web",
+    "grant_types": ["authorization_code", "refresh_token"],
+    "response_types": ["code"],
+    "token_endpoint_auth_method": "private_key_jwt",
+    "token_endpoint_auth_signing_alg": "RS256",
+    "scope": "atproto transition:generic",
+    "redirect_uris": [
+      "https://etch.social/bsky/auth/callback"
+    ],
+    "dpop_bound_access_tokens": true,
+    "jwks_uri": "https://etch.social/jwks.json"
+  }

@@ -13,6 +13,9 @@ export default function SignIn({onClose}: SignInProps) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const [, setBskyHandle] = useLocalState("bsky/handle", "")
+  const [, setBskyDid] = useLocalState("bsky/did", "")
+  const [, setBskyAvatar] = useLocalState("bsky/avatar", "")
   const [, setShowLoginDialog] = useLocalState("home/showLoginDialog", false)
   const [, setShowForgotPasswordDialog] = useLocalState(
     "home/showForgotPasswordDialog",
@@ -29,7 +32,13 @@ export default function SignIn({onClose}: SignInProps) {
     }
 
     try {
-      const {privKey, nostrPubKey} = await signIn({email, password})
+      const {privKey, nostrPubKey, bskyData} = await signIn({email, password})
+      const handle = bskyData.handle || ""
+      const did = bskyData.did || ""
+      const avatar = bskyData.avatar || ""
+      setBskyHandle(handle)
+      setBskyDid(did)
+      setBskyAvatar(avatar)
       localState.get("user/privateKey").put(privKey)
       localState.get("user/publicKey").put(nostrPubKey)
       const privateKeySigner = new NDKPrivateKeySigner(privKey)

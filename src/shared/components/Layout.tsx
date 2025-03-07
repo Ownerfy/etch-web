@@ -1,4 +1,10 @@
-import {Outlet, ScrollRestoration, useLocation, useNavigate} from "react-router-dom"
+import {
+  Outlet,
+  ScrollRestoration,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom"
 import ForgotPasswordDialog from "@/shared/components/user/ForgotPassword.tsx"
 import WelcomeDialog from "@/shared/components/user/WelcomeDialog.tsx"
 import NoteCreator from "@/shared/components/create/NoteCreator.tsx"
@@ -43,6 +49,14 @@ const Layout = () => {
   const [isSocialGraphLoaded, setIsSocialGraphLoaded] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams] = useSearchParams()
+
+  // Add new useLocalState hooks for Bluesky data
+  const [, setBskyToken] = useLocalState("bsky/token", "")
+  const [, setBskyDid] = useLocalState("bsky/did", "")
+  const [, setBskyHandle] = useLocalState("bsky/handle", "")
+  const [, setBskyDescription] = useLocalState("bsky/description", "")
+  const [, setBskyAvatar] = useLocalState("bsky/avatar", "")
 
   // if user is not logged in show login dialog
   useEffect(() => {
@@ -87,6 +101,23 @@ const Layout = () => {
       navigator.serviceWorker.removeEventListener("message", handleServiceWorkerMessage)
     }
   }, [navigate])
+
+  // Add effect to handle Bluesky OAuth callback
+  useEffect(() => {
+    const bskyParams = ["token", "did", "handle", "description", "avatar"]
+    const hasAnyBskyParam = bskyParams.some((param) => searchParams.has(param))
+
+    if (hasAnyBskyParam) {
+      setBskyToken(searchParams.get("token") || "")
+      setBskyDid(searchParams.get("did") || "")
+      setBskyHandle(searchParams.get("handle") || "")
+      setBskyDescription(searchParams.get("description") || "")
+      setBskyAvatar(searchParams.get("avatar") || "")
+
+      // Clear the URL parameters after storing them
+      // navigate(location.pathname, {replace: true})
+    }
+  }, [searchParams, navigate, location.pathname])
 
   return (
     <div className="relative flex flex-col w-full max-w-screen-xl min-h-screen overscroll-none">
