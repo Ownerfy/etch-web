@@ -16,7 +16,7 @@ const safeOrigins = [
   "data:image",
   "https://imgur.com/",
   "https://i.imgur.com/",
-  "https://imgproxy.etch.social/",
+  "https://imgproxy.iris.to/",
 ]
 
 const shouldSkipProxy = (url: string) => {

@@ -90,6 +90,8 @@ const publishNote = async ({
   repliedEvent,
   addLinkBack,
   publishOnBlueSky,
+  bskyReplyUri,
+  bskyReplyCid,
   quotedEvent,
   generatedImageUrl,
 }: {
@@ -102,6 +104,8 @@ const publishNote = async ({
   quotedEvent: string | null
   generatedImageUrl: string | null
   publishOnBlueSky: boolean
+  bskyReplyUri: string | null
+  bskyReplyCid: string | null
   addLinkBack: boolean
 }) => {
   const response = await axios.post(
@@ -112,6 +116,8 @@ const publishNote = async ({
       uploadedVideo,
       isNft,
       publishOnBlueSky,
+      bskyReplyUri,
+      bskyReplyCid,
       addLinkBack,
       uploadedImages,
       repliedEvent,
@@ -175,10 +181,72 @@ const bskyAuthLogin = async (handle: string, redirectUrl: string) => {
 export {bskyAuthLogin}
 
 const getBskyTimeline = async (cursor: string | null) => {
-  const response = await axios.get(`api/bsky/timeline`, {
+  const response = await axios.get(`api/social/bsky/timeline`, {
     params: {cursor},
   })
+  console.log("Bsky Timeline Response:::   ", response.data)
   return response.data
 }
 
 export {getBskyTimeline}
+
+const getBskyPostThread = async (postId: string) => {
+  const response = await axios.get(`api/social/bsky/thread`, {
+    params: {uri: postId},
+  })
+  return response.data
+}
+
+export {getBskyPostThread}
+
+const bskyLikePost = async (uri: string, cid: string, like: boolean) => {
+  const response = await axios.post(`api/social/bsky/like`, {
+    uri,
+    cid,
+    like, // true to like, false to unlike
+  })
+  return response.data
+}
+
+const bskyRepostPost = async (uri: string, cid: string, repost: boolean) => {
+  const response = await axios.post(`api/social/bsky/repost`, {
+    uri,
+    cid,
+    repost, // true to repost, false to unrepost
+  })
+  return response.data
+}
+
+export {bskyLikePost, bskyRepostPost}
+
+const getBskyLatestPosts = async (cursor?: string | null) => {
+  try {
+    const response = await axios.get(`/api/social/bsky/latest`, {
+      params: {
+        cursor: cursor || undefined,
+      },
+    })
+    return response.data
+  } catch (error) {
+    console.error("Error fetching BlueSky latest posts:", error)
+    throw error
+  }
+}
+
+export {getBskyLatestPosts}
+
+const getBskyPopularPosts = async (cursor?: string | null) => {
+  try {
+    const response = await axios.get(`/api/social/bsky/popular`, {
+      params: {
+        cursor: cursor || undefined,
+      },
+    })
+    return response.data
+  } catch (error) {
+    console.error("Error fetching BlueSky popular posts:", error)
+    throw error
+  }
+}
+
+export {getBskyPopularPosts}

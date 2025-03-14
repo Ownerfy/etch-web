@@ -20,7 +20,7 @@ export default function WalletPage() {
       <RightColumn>
         {() => (
           <>
-            <Widget title="Trending posts">
+            <Widget title="Nostr trending posts">
               <Trending />
             </Widget>
           </>

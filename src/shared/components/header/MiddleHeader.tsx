@@ -7,15 +7,21 @@ import classNames from "classnames"
 interface MiddleHeaderProps {
   title?: string
   children?: ReactNode
+  backButton?: boolean
+  onBack?: () => void
 }
 
-const MiddleHeader = ({title, children}: MiddleHeaderProps) => {
+const MiddleHeader = ({title, children, backButton, onBack}: MiddleHeaderProps) => {
   const navigate = useNavigate()
   const {pathname} = useLocation()
 
   const handleBackClick = useCallback(() => {
-    navigate(-1)
-  }, [navigate])
+    if (onBack) {
+      onBack()
+    } else {
+      navigate(-1)
+    }
+  }, [navigate, onBack])
 
   const handleHeaderClick = useCallback(() => {
     window.scrollTo({top: 0})
@@ -35,7 +41,7 @@ const MiddleHeader = ({title, children}: MiddleHeaderProps) => {
           className={classNames(
             "mr-4 text-base-content hover:text-primary transition-colors",
             {
-              hidden: pathname === "/",
+              hidden: !backButton && pathname === "/",
             }
           )}
           aria-label="Go back"

@@ -1,5 +1,6 @@
 import {useMemo, useState, useEffect, FormEvent, useCallback} from "react"
 import MiddleHeader from "@/shared/components/header/MiddleHeader"
+import BskyTrending from "@/shared/components/feed/BskyTrending"
 import RightColumn from "@/shared/components/RightColumn.tsx"
 import Trending from "@/shared/components/feed/Trending.tsx"
 import SearchBox from "@/shared/components/ui/SearchBox"
@@ -8,7 +9,6 @@ import {NDKFilter, NDKEvent} from "@nostr-dev-kit/ndk"
 import Feed from "@/shared/components/feed/Feed.tsx"
 import Widget from "@/shared/components/ui/Widget"
 import {Helmet} from "react-helmet"
-
 function SearchPage() {
   const {query} = useParams()
   const navigate = useNavigate()
@@ -96,10 +96,11 @@ function SearchPage() {
       <RightColumn>
         {() => (
           <>
-            <Widget title="Trending posts">
+            <BskyTrending />
+            <Widget title="Nostr trending posts">
               <Trending />
             </Widget>
-            <Widget title="Popular hashtags">
+            <Widget title="Nostr popular hashtags">
               <Trending contentType="hashtags" />
             </Widget>
           </>

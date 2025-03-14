@@ -123,7 +123,7 @@ export default function Trending({
         )
         if (!res.ok) throw new Error("Failed to fetch from nostr.wine")
         const data: NostrWineResponse[] = await res.json()
-        console.log("Fetched trending events from wine : ", data)
+        // console.log("Fetched trending events from wine : ", data)
 
         // 2. Create NDK instance with relay
         const ndkInstance = ndk()

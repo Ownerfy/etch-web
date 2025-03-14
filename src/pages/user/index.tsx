@@ -121,7 +121,7 @@ function UserPage({pubKey}: {pubKey: string}) {
               </Widget>
             )}
             {pubKeyHex === myPubKey && (
-              <Widget title="Trending posts">
+              <Widget title="Nostr trending posts">
                 <Trending />
               </Widget>
             )}

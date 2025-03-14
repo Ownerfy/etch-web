@@ -1,5 +1,6 @@
 import {createBrowserRouter, createRoutesFromElements, Route} from "react-router-dom"
 
+import BskyPostDetail from "@/shared/components/feed/BskyPostDetail"
 import NostrLinkHandler from "@/pages/NostrLinkHandler.tsx"
 import Notifications from "./notifications/Notifications"
 import {PrivacyPolicy} from "@/pages/PrivacyPolicy"
@@ -31,6 +32,7 @@ export const router = createBrowserRouter(
       <Route path="/u/:link/*" element={<NostrLinkHandler />} />
       <Route path="/p/:link/*" element={<NostrLinkHandler />} />
       <Route path="/:link/*" element={<NostrLinkHandler />} />
+      <Route path="/bsky/post/:postId" element={<BskyPostDetail />} />
     </Route>,
   ])
 )

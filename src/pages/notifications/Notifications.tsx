@@ -1,10 +1,10 @@
 import NotificationsFeed from "@/shared/components/feed/NotificationsFeed.tsx"
 import MiddleHeader from "@/shared/components/header/MiddleHeader"
+import BskyTrending from "@/shared/components/feed/BskyTrending"
+import {subscribeToNotifications} from "@/utils/notifications"
 import RightColumn from "@/shared/components/RightColumn"
 import Trending from "@/shared/components/feed/Trending"
 import Widget from "@/shared/components/ui/Widget"
-
-import {subscribeToNotifications} from "@/utils/notifications"
 import {useEffect} from "react"
 let subscribed = false
 
@@ -26,7 +26,8 @@ function Notifications() {
       <RightColumn>
         {() => (
           <>
-            <Widget title="Trending posts">
+            <BskyTrending />
+            <Widget title="Nostr trending posts">
               <Trending />
             </Widget>
           </>

@@ -249,7 +249,7 @@ const NavSideBar = () => {
       >
         <div className="flex flex-col items-start md:items-center xl:items-start gap-4 md:gap-2 xl:gap-4">
           <NavLink
-            className="md:mb-2 xl:mb-0 mt-4 ml-4 md:ml-0 xl:ml-5 flex flex-row gap-2 items-center md:justify-center font-bold font-bold text-3xl"
+            className="md:mb-2 xl:mb-0 mt-4 ml-4 md:ml-0 xl:ml-7 flex flex-row gap-2 items-center md:justify-center font-bold font-bold text-3xl"
             to="/"
           >
             <img className="w-8 h-8" src={logoUrl} />

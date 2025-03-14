@@ -12,13 +12,18 @@ import {useLocalState} from "irisdb-hooks"
 import {drawText} from "canvas-txt"
 
 // import {eventsByIdCache} from "@/utils/memcache"
+import BskyFeedItem, {type BskyPost} from "../feed/BskyFeedItem"
 import {useNavigate} from "react-router-dom"
+import {toast} from "react-hot-toast"
 import {nip19} from "nostr-tools"
 import Textarea from "./Textarea"
 import {AxiosError} from "axios"
 
 type handleCloseFunction = () => void
 
+// TODO: currently quotedEvent is being passed in and repliedEvent
+// is getting pulled from the local state. We should to normalize this to
+// one or the other.
 interface NoteCreatorProps {
   repliedEvent?: NDKEvent
   quotedEvent?: NDKEvent
@@ -75,7 +80,6 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadError, setUploadError] = useState<string | null>(null)
 
-  // Update this state definition to handle string type properly
   const [publishAsNft, setPublishAsNft] = useLocalState(
     "user/publishAsNft",
     localStorage.getItem("publishAsNft") || "false"
@@ -105,6 +109,12 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
     localStorage.getItem("bsky/addLinkBack") || "true"
   )
 
+  // Update the useLocalState call with the proper type
+  const [bskyReplyPost, setBskyReplyPost] = useLocalState<BskyPost | null>(
+    "compose/bskyReplyPost",
+    null
+  )
+
   // Add credit fetching
   const getUserCredits = async () => {
     try {
@@ -126,6 +136,20 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
 
     return () => window.removeEventListener("focus", handleFocus)
   }, [])
+
+  // Add this to clear the reply post when component unmounts or closes
+  useEffect(() => {
+    return () => {
+      setBskyReplyPost(null)
+    }
+  }, [])
+
+  // Add this effect to set publishOnBlueSky to true when bskyReplyPost is present
+  useEffect(() => {
+    if (bskyReplyPost) {
+      setPublishOnBlueSky("true")
+    }
+  }, [bskyReplyPost])
 
   function refreshImagePreviewUrl() {
     if (publishAsNft === "true" && !uploadedVideo && uploadedImages.size === 0) {
@@ -262,6 +286,8 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
         quotedEvent:
           Object.keys(_quotedEvent).length > 0 ? JSON.stringify(_quotedEvent) : "",
         generatedImageUrl,
+        bskyReplyUri: bskyReplyPost?.post?.uri || null,
+        bskyReplyCid: bskyReplyPost?.post?.cid || null,
       })
       // Event does come back from above but needs to be translated back to NDKEvent
       // eventsByIdCache.set(eventId, event)
@@ -285,7 +311,17 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
         // Check if it's an axios error with response data
         const axiosError = error as AxiosError<{message: string}>
         if (axiosError.response?.data?.message) {
-          setUploadError(axiosError.response.data.message)
+          if (
+            axiosError.response.data.message.includes(
+              "The session was deleted by another process"
+            )
+          ) {
+            setUploadError(
+              "Please go to settings > accounts and refresh the BlueSky authorization"
+            )
+          } else {
+            setUploadError(axiosError.response.data.message)
+          }
         } else {
           console.error("Failed to publish note", error.message)
           setUploadError(error.message)
@@ -304,6 +340,14 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
 
   // Modify the publishOnBlueSky checkbox handler
   const handleBlueSkyToggle = () => {
+    // If replying to a BlueSky post, don't allow turning off BlueSky publishing
+    if (bskyReplyPost && publishOnBlueSky === "true") {
+      toast("BlueSky publishing is required when replying to a BlueSky post", {
+        icon: "ℹ️",
+      })
+      return
+    }
+
     if (publishOnBlueSky === "false" && !bskyDid) {
       alert("Please connect your BlueSky account in Settings > Accounts")
       return
@@ -330,6 +374,15 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
       )}
 
       <div className="p-4 md:p-8 flex flex-col gap-4">
+        {/* Display BlueSky post being replied to if present */}
+        {bskyReplyPost && (
+          <div className="mb-4 border-b border-custom pb-4">
+            <div className="text-sm text-base-content/60 mb-2">
+              Replying to BlueSky post
+            </div>
+            <BskyFeedItem post={bskyReplyPost} isReplyPreview={true} />
+          </div>
+        )}
         <Textarea
           value={noteContent}
           onChange={handleContentChange}
@@ -491,6 +544,7 @@ function NoteCreator({handleClose, quotedEvent, repliedEvent}: NoteCreatorProps)
               checked={publishOnBlueSky === "true"}
               className="toggle toggle-primary mr-2"
               onChange={handleBlueSkyToggle}
+              disabled={!!bskyReplyPost}
             />
             <span>Publish on BlueSky</span>
           </label>

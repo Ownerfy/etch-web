@@ -1,5 +1,6 @@
 import FeedItem from "@/shared/components/event/FeedItem/FeedItem"
 import MiddleHeader from "@/shared/components/header/MiddleHeader"
+import BskyTrending from "@/shared/components/feed/BskyTrending"
 import RightColumn from "@/shared/components/RightColumn.tsx"
 import Trending from "@/shared/components/feed/Trending.tsx"
 import FollowList from "@/pages/user/components/FollowList"
@@ -9,7 +10,6 @@ import {NDKEvent} from "@nostr-dev-kit/ndk"
 import {useLocalState} from "irisdb-hooks"
 import {getTags} from "@/utils/nostr"
 import {useState} from "react"
-
 export default function ThreadPage({id}: {id: string}) {
   const [relevantPeople, setRelevantPeople] = useState(new Map<string, boolean>())
   const [hideEventsByUnknownUsers] = useLocalState(
@@ -54,7 +54,8 @@ export default function ThreadPage({id}: {id: string}) {
                 />
               </Widget>
             )}
-            <Widget title="Trending posts">
+            <BskyTrending />
+            <Widget title="Nostr trending posts">
               <Trending />
             </Widget>
           </>

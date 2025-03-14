@@ -5,7 +5,9 @@ import PublicKeyQRCodeButton from "@/shared/components/user/PublicKeyQRCodeButto
 import {defaultFeedFilter, isGem, isIssue, isPR} from "@/utils/nostr"
 
 import MiddleHeader from "@/shared/components/header/MiddleHeader"
+import BskyTrending from "@/shared/components/feed/BskyTrending"
 import {fnByFilter, widgetFilterKinds} from "@/utils/filtering"
+import BskyFeed from "@/shared/components/feed/BskyFeed.tsx"
 import useHistoryState from "@/shared/hooks/useHistoryState"
 import Trending from "@/shared/components/feed/Trending"
 // import NotificationPrompt from "./NotificationPrompt"
@@ -21,6 +23,25 @@ const UNSEEN_CACHE_KEY = "unseenFeed"
 // const ETCH_CACHE_KEY = "etchFeed"
 
 const tabs = [
+  {
+    name: "BlueSky Latest",
+    path: "bskyLatest",
+    showRepliedTo: false,
+  },
+
+  {
+    name: "BlueSky Trending",
+    path: "bskyTrending",
+    showRepliedTo: false,
+  },
+
+  {
+    // Filter don't matter here because it just triggers the trending element
+    name: "BlueSky For You",
+    path: "bskyTimeline",
+    showRepliedTo: false,
+  },
+
   {
     // Filter don't matter here because it just triggers the trending element
     name: "Nostr Trending",
@@ -185,7 +206,7 @@ function HomeFeedEvents() {
     <>
       <MiddleHeader title={feedName} />
       {!CONFIG.rightColumnFilters && (
-        <div className="px-4 pb-4 flex flex-row gap-2 overflow-x-auto max-w-[100vw] scrollbar-hide">
+        <div className="px-4 pb-4 flex flex-row flex-wrap gap-2 max-w-[100vw]">
           {tabs.map((t) => (
             <button
               key={t.path}
@@ -198,20 +219,46 @@ function HomeFeedEvents() {
         </div>
       )}
 
-      {activeTab === "trending" ? (
-        <Trending small={false} contentType="notes" />
-      ) : (
-        <Feed
-          key={activeTab}
-          filters={filters}
-          displayFilterFn={displayFilterFn}
-          fetchFilterFn={activeTabItem.fetchFilterFn}
-          cacheKey={activeTabItem.cacheKey}
-          showRepliedTo={CONFIG.rightColumnFilters || activeTabItem.showRepliedTo}
-          emptyPlaceholder={<EmptyPlaceholder follows={follows} myPubKey={myPubKey} />}
-          forceUpdate={forceUpdate}
-        />
-      )}
+      {(() => {
+        if (activeTab === "trending") {
+          return <Trending small={false} contentType="notes" />
+        } else if (activeTab === "bskyTimeline") {
+          return (
+            <BskyFeed
+              feedType="timeline"
+              emptyPlaceholder={
+                <EmptyPlaceholder follows={follows} myPubKey={myPubKey} />
+              }
+            />
+          )
+        } else if (activeTab === "bskyLatest") {
+          return (
+            <BskyFeed
+              feedType="latest"
+              emptyPlaceholder={
+                <EmptyPlaceholder follows={follows} myPubKey={myPubKey} />
+              }
+            />
+          )
+        } else if (activeTab === "bskyTrending") {
+          return <BskyTrending small={false} standalone={true} />
+        } else {
+          return (
+            <Feed
+              key={activeTab}
+              filters={filters}
+              displayFilterFn={displayFilterFn}
+              fetchFilterFn={activeTabItem.fetchFilterFn}
+              cacheKey={activeTabItem.cacheKey}
+              showRepliedTo={CONFIG.rightColumnFilters || activeTabItem.showRepliedTo}
+              emptyPlaceholder={
+                <EmptyPlaceholder follows={follows} myPubKey={myPubKey} />
+              }
+              forceUpdate={forceUpdate}
+            />
+          )
+        }
+      })()}
     </>
   )
 }
